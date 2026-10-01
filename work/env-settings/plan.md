@@ -35,7 +35,7 @@
   - test: `src/config/tests/test_settings.py` (create the `src/config/tests/__init__.py` package). The test asserts a line matching `django-environ==<x.y.z>`.
   - impl: add `django-environ==0.14.0` to `requirements.txt`, then `.venv/bin/pip install -r requirements-dev.txt`.
   - covers: AC9
-- [ ] 2. `SECRET_KEY` is read from a repo-root `.env` when the process environment lacks it
+- [x] 2. `SECRET_KEY` is read from a repo-root `.env` when the process environment lacks it
   - test: `load_settings({}, dotenv="DJANGO_SECRET_KEY=from-file")["SECRET_KEY"] == "from-file"`. It is red because the hardcoded literal is still returned.
   - impl: `src/config/settings.py` creates an `environ.Env()`, calls `read_env(BASE_DIR.parent / ".env")`, sets `SECRET_KEY = env("DJANGO_SECRET_KEY")` and deletes the literal.
   - prerequisite before running green: `cp .env.example .env` locally (gitignored, never committed).
