@@ -52,7 +52,7 @@
   - test: job `lint` exists, runs on `ubuntu-latest`, and its `run:` steps include `pip install -r requirements-dev.txt`, `ruff check .` and `ruff format --check .`.
   - impl: the `lint` job in `ci.yml`, with checkout, install, check and format-check.
   - covers: AC3
-- [ ] 5. `test` job
+- [x] 5. `test` job
   - test: job `test` exists, runs on `ubuntu-latest`, and its `run:` steps include `pip install -r requirements-dev.txt` and `python src/manage.py test src`.
   - impl: the `test` job in `ci.yml`.
   - covers: AC4

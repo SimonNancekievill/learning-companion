@@ -60,3 +60,12 @@ class LintJobTests(JobTestCase):
         self.assertIn("pip install -r requirements-dev.txt", script)
         self.assertIn("ruff check .", script)
         self.assertIn("ruff format --check .", script)
+
+
+class TestJobTests(JobTestCase):
+    def test_test_job_installs_dev_requirements_and_runs_django_tests(self):
+        self.assertEqual(self.job("test")["runs-on"], "ubuntu-latest")
+        script = self.run_script("test")
+
+        self.assertIn("pip install -r requirements-dev.txt", script)
+        self.assertIn("python src/manage.py test src", script)
