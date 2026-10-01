@@ -44,7 +44,7 @@
   - test: `workflow()` returns a dict and `"jobs"` is a dict. It is red because the file is missing.
   - impl: `.github/workflows/ci.yml` with `name: CI` and an empty `jobs: {}`.
   - covers: AC1
-- [ ] 3. Triggers
+- [x] 3. Triggers
   - test: `workflow()[True]` has a `push` key with no `branches` filter, and `pull_request.branches` equals `{"develop", "main"}`.
   - impl: the `on:` block in `ci.yml`.
   - covers: AC2

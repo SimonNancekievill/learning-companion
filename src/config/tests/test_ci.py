@@ -27,3 +27,12 @@ class WorkflowFileTests(SimpleTestCase):
 
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data.get("jobs"), dict)
+
+    def test_runs_on_every_push_and_on_pull_requests_into_develop_and_main(self):
+        data = workflow()
+        self.assertIn(True, data, "workflow has no `on:` triggers")
+        triggers = data[True]
+
+        self.assertIn("push", triggers)
+        self.assertNotIn("branches", triggers["push"] or {})
+        self.assertEqual(set(triggers["pull_request"]["branches"]), {"develop", "main"})
