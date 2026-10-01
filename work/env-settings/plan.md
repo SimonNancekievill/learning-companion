@@ -57,7 +57,7 @@
   - test: subTests: `localhost,127.0.0.1` → `["localhost", "127.0.0.1"]`, `localhost, 127.0.0.1` → same, unset → `[]`. It is red on the first case.
   - impl: `ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", cast=str.strip, default=[])`.
   - covers: AC4
-- [ ] 6. `.env.example` documents every variable the settings read
+- [x] 6. `.env.example` documents every variable the settings read
   - test: for each of `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DJANGO_ALLOWED_HOSTS`, a `NAME=` line exists and is directly preceded by a `#` comment line. `OPENAI_API_KEY=` is present. The text "not read by" is absent. It is red because the stale note is still there.
   - impl: rewrite the `.env.example` comments and remove the stale note. Mention generating a key with `secrets.token_urlsafe(50)`, since values starting with `$` are treated as references. Add `cp .env.example .env` to the setup command in `CLAUDE.md`.
   - covers: AC10

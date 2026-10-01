@@ -92,3 +92,22 @@ class AllowedHostsTests(SimpleTestCase):
                 env = REQUIRED_ENV | ({} if value is None else {"DJANGO_ALLOWED_HOSTS": value})
 
                 self.assertEqual(load_settings(env)["ALLOWED_HOSTS"], expected)
+
+
+class EnvExampleTests(SimpleTestCase):
+    def setUp(self):
+        self.text = (REPO_ROOT / ".env.example").read_text()
+        self.lines = self.text.splitlines()
+
+    def test_every_settings_variable_is_documented_with_a_comment(self):
+        for name in ("DJANGO_SECRET_KEY", "DJANGO_DEBUG", "DJANGO_ALLOWED_HOSTS"):
+            with self.subTest(name=name):
+                index = next(i for i, line in enumerate(self.lines) if line.startswith(f"{name}="))
+
+                self.assertTrue(self.lines[index - 1].startswith("#"))
+
+    def test_openai_api_key_placeholder_is_kept(self):
+        self.assertIn("OPENAI_API_KEY=", self.lines)
+
+    def test_stale_not_read_note_is_removed(self):
+        self.assertNotIn("not read by", self.text.lower())
