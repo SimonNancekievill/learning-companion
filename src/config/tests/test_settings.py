@@ -65,3 +65,16 @@ class SecretKeyTests(SimpleTestCase):
 
     def test_settings_source_contains_no_hardcoded_secret_key(self):
         self.assertNotIn("django-insecure-", SETTINGS_FILE.read_text())
+
+
+REQUIRED_ENV = {"DJANGO_SECRET_KEY": "test-key"}
+
+
+class DebugTests(SimpleTestCase):
+    def test_debug_follows_django_debug_and_defaults_to_false(self):
+        cases = {"true": True, "1": True, "false": False, "0": False, None: False}
+        for value, expected in cases.items():
+            with self.subTest(DJANGO_DEBUG=value):
+                env = REQUIRED_ENV | ({} if value is None else {"DJANGO_DEBUG": value})
+
+                self.assertIs(load_settings(env)["DEBUG"], expected)

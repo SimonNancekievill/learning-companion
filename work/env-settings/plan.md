@@ -49,7 +49,7 @@
   - test: `src/config/tests/test_settings.py`
   - impl: none
   - covers: AC1, AC2, AC6, AC7, AC8
-- [ ] 4. `DEBUG` comes from `DJANGO_DEBUG` and defaults to `False`
+- [x] 4. `DEBUG` comes from `DJANGO_DEBUG` and defaults to `False`
   - test: one test with subTests: `true`/`1` → `True`, `false`/`0` → `False`, unset → `False`. It is red on the unset case.
   - impl: `DEBUG = env.bool("DJANGO_DEBUG", default=False)` in `settings.py`.
   - covers: AC3
