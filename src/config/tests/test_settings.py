@@ -78,3 +78,17 @@ class DebugTests(SimpleTestCase):
                 env = REQUIRED_ENV | ({} if value is None else {"DJANGO_DEBUG": value})
 
                 self.assertIs(load_settings(env)["DEBUG"], expected)
+
+
+class AllowedHostsTests(SimpleTestCase):
+    def test_allowed_hosts_is_comma_separated_list_and_defaults_to_empty(self):
+        cases = {
+            "localhost,127.0.0.1": ["localhost", "127.0.0.1"],
+            "localhost, 127.0.0.1": ["localhost", "127.0.0.1"],
+            None: [],
+        }
+        for value, expected in cases.items():
+            with self.subTest(DJANGO_ALLOWED_HOSTS=value):
+                env = REQUIRED_ENV | ({} if value is None else {"DJANGO_ALLOWED_HOSTS": value})
+
+                self.assertEqual(load_settings(env)["ALLOWED_HOSTS"], expected)

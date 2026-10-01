@@ -53,7 +53,7 @@
   - test: one test with subTests: `true`/`1` → `True`, `false`/`0` → `False`, unset → `False`. It is red on the unset case.
   - impl: `DEBUG = env.bool("DJANGO_DEBUG", default=False)` in `settings.py`.
   - covers: AC3
-- [ ] 5. `ALLOWED_HOSTS` comes from the comma-separated `DJANGO_ALLOWED_HOSTS` and defaults to `[]`
+- [x] 5. `ALLOWED_HOSTS` comes from the comma-separated `DJANGO_ALLOWED_HOSTS` and defaults to `[]`
   - test: subTests: `localhost,127.0.0.1` → `["localhost", "127.0.0.1"]`, `localhost, 127.0.0.1` → same, unset → `[]`. It is red on the first case.
   - impl: `ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", cast=str.strip, default=[])`.
   - covers: AC4
