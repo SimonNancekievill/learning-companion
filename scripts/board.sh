@@ -5,7 +5,8 @@
 #
 # Usage:
 #   board.sh setup                       one-time: repo merge settings and project board (works on an empty repo)
-#   board.sh protect                     one-time, after main and develop are pushed: branch protection
+#   board.sh protect                     after main and develop are pushed (rerun when CI checks change):
+#                                        branch protection, CI checks `lint` and `test` required
 #   board.sh sync                        backlog lines without an issue -> issues on the board;
 #                                        Todo issues on the board missing from the backlog -> backlog lines;
 #                                        reports status drift between the two
@@ -177,10 +178,10 @@ cmd_protect() {
   owner="$(repo_owner)"
   repo="$(repo_name)"
 
-  echo "Branch protection: main only via pull request, no force-push or deletion"
+  echo "Branch protection: main only via pull request, CI lint+test required, no force-push or deletion"
   gh api -X PUT "repos/$owner/$repo/branches/main/protection" --input - >/dev/null <<'JSON'
 {
-  "required_status_checks": null,
+  "required_status_checks": { "strict": false, "checks": [{ "context": "lint" }, { "context": "test" }] },
   "enforce_admins": true,
   "required_pull_request_reviews": { "required_approving_review_count": 0 },
   "restrictions": null,
@@ -189,10 +190,10 @@ cmd_protect() {
 }
 JSON
 
-  echo "Branch protection: develop, no force-push or deletion"
+  echo "Branch protection: develop, CI lint+test required, no force-push or deletion"
   gh api -X PUT "repos/$owner/$repo/branches/develop/protection" --input - >/dev/null <<'JSON'
 {
-  "required_status_checks": null,
+  "required_status_checks": { "strict": false, "checks": [{ "context": "lint" }, { "context": "test" }] },
   "enforce_admins": false,
   "required_pull_request_reviews": null,
   "restrictions": null,
