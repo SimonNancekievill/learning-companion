@@ -69,3 +69,22 @@ class TestJobTests(JobTestCase):
 
         self.assertIn("pip install -r requirements-dev.txt", script)
         self.assertIn("python src/manage.py test src", script)
+
+
+class PythonSetupTests(JobTestCase):
+    def test_jobs_take_python_version_from_file_and_cache_pip(self):
+        for name in ("lint", "test"):
+            with self.subTest(job=name):
+                setup = [
+                    step
+                    for step in self.steps(name)
+                    if step.get("uses", "").startswith("actions/setup-python@")
+                ]
+                self.assertEqual(len(setup), 1, "expected exactly one setup-python step")
+                self.assertEqual(setup[0]["uses"], "actions/setup-python@v7")
+                options = setup[0].get("with", {})
+
+                self.assertEqual(options.get("python-version-file"), ".python-version")
+                self.assertNotIn("python-version", options)
+                self.assertEqual(options.get("cache"), "pip")
+                self.assertIn("requirements-dev.txt", options.get("cache-dependency-path", ""))

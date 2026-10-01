@@ -56,7 +56,7 @@
   - test: job `test` exists, runs on `ubuntu-latest`, and its `run:` steps include `pip install -r requirements-dev.txt` and `python src/manage.py test src`.
   - impl: the `test` job in `ci.yml`.
   - covers: AC4
-- [ ] 6. Python from `.python-version` with pip cache
+- [x] 6. Python from `.python-version` with pip cache
   - test: both jobs have an `actions/setup-python@v7` step whose `with` has `python-version-file: .python-version`, no `python-version`, `cache: pip`, and a `cache-dependency-path` that mentions `requirements-dev.txt`.
   - impl: add the setup-python step to both jobs.
   - covers: AC5
