@@ -36,3 +36,27 @@ class WorkflowFileTests(SimpleTestCase):
         self.assertIn("push", triggers)
         self.assertNotIn("branches", triggers["push"] or {})
         self.assertEqual(set(triggers["pull_request"]["branches"]), {"develop", "main"})
+
+
+class JobTestCase(SimpleTestCase):
+    def job(self, name: str) -> dict:
+        jobs = workflow()["jobs"]
+        self.assertIn(name, jobs, f"workflow has no `{name}` job")
+        return jobs[name]
+
+    def steps(self, name: str) -> list[dict]:
+        return self.job(name).get("steps", [])
+
+    def run_script(self, name: str) -> str:
+        """All `run:` commands of the job, joined in step order."""
+        return "\n".join(step["run"] for step in self.steps(name) if "run" in step)
+
+
+class LintJobTests(JobTestCase):
+    def test_lint_job_installs_dev_requirements_and_runs_ruff(self):
+        self.assertEqual(self.job("lint")["runs-on"], "ubuntu-latest")
+        script = self.run_script("lint")
+
+        self.assertIn("pip install -r requirements-dev.txt", script)
+        self.assertIn("ruff check .", script)
+        self.assertIn("ruff format --check .", script)

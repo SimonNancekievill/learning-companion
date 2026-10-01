@@ -48,7 +48,7 @@
   - test: `workflow()[True]` has a `push` key with no `branches` filter, and `pull_request.branches` equals `{"develop", "main"}`.
   - impl: the `on:` block in `ci.yml`.
   - covers: AC2
-- [ ] 4. `lint` job
+- [x] 4. `lint` job
   - test: job `lint` exists, runs on `ubuntu-latest`, and its `run:` steps include `pip install -r requirements-dev.txt`, `ruff check .` and `ruff format --check .`.
   - impl: the `lint` job in `ci.yml`, with checkout, install, check and format-check.
   - covers: AC3
