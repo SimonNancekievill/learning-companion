@@ -20,6 +20,7 @@ Run from the repo root:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # setup
+cp .env.example .env                                                     # then set DJANGO_SECRET_KEY
 .venv/bin/python src/manage.py runserver                                 # dev server
 .venv/bin/python src/manage.py test src                                  # test suite
 .venv/bin/python src/manage.py makemigrations && .venv/bin/python src/manage.py migrate

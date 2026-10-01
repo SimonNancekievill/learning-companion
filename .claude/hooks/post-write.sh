@@ -19,7 +19,7 @@ echo "$(date -Iseconds) WRITE $rel" >> "$log_dir/activity.log"
 
 phase="$(current_phase)"
 if [ "$phase" = "implementing" ] && [ "$RUN_TESTS_ON_WRITE" = "true" ] \
-   && [ -f package.json ] && echo "$rel" | grep -qE "^($SOURCE_DIRS)/"; then
+   && [ -n "$TEST_CMD" ] && echo "$rel" | grep -qE "^($SOURCE_DIRS)/"; then
   if $TEST_CMD >/dev/null 2>&1; then
     status="green"
   else

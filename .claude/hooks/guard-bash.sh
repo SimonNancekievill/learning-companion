@@ -18,7 +18,10 @@ phase="$(current_phase)"
 branch="$(current_branch)"
 
 if is_git "commit"; then
-  if echo "$cmd" | grep -qE -- "--no-verify|-n\b"; then
+  # Only inspect the git commit invocation itself, so flags of other commands
+  # in the same line (e.g. `sed -n`) don't trigger a false positive.
+  commit_args="$(echo "$cmd" | grep -oE "git\s+commit[^;&|]*")"
+  if echo "$commit_args" | grep -qE -- "--no-verify|(^|\s)-[a-zA-Z]*n[a-zA-Z]*\b"; then
     echo "BLOCKED by workflow: 'git commit --no-verify' is not allowed. Commit hooks are part of the quality gate." >&2
     exit 2
   fi
@@ -31,11 +34,9 @@ if is_git "commit"; then
     exit 2
   fi
   if [ "$phase" = "implementing" ] || [ "$phase" = "reviewing" ]; then
-    if [ -f package.json ]; then
-      if ! $TEST_CMD >/dev/null 2>&1; then
-        echo "BLOCKED by workflow: the test suite is red. Commits are only allowed on green. Finish the current TDD cycle first ($TEST_CMD)." >&2
-        exit 2
-      fi
+    if [ -n "$TEST_CMD" ] && ! $TEST_CMD >/dev/null 2>&1; then
+      echo "BLOCKED by workflow: the test suite is red. Commits are only allowed on green. Finish the current TDD cycle first ($TEST_CMD)." >&2
+      exit 2
     fi
   fi
 fi
