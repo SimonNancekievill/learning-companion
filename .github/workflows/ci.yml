@@ -37,5 +37,10 @@ jobs:
             requirements-dev.txt
       - name: Install dependencies
         run: python -m pip install -r requirements-dev.txt
+      - name: Generate throwaway secret key
+        run: |
+          key="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
+          echo "::add-mask::$key"
+          echo "DJANGO_SECRET_KEY=$key" >> "$GITHUB_ENV"
       - name: Django tests
         run: python src/manage.py test src

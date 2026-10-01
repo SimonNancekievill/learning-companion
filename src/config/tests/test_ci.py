@@ -88,3 +88,29 @@ class PythonSetupTests(JobTestCase):
                 self.assertNotIn("python-version", options)
                 self.assertEqual(options.get("cache"), "pip")
                 self.assertIn("requirements-dev.txt", options.get("cache-dependency-path", ""))
+
+
+class SecretKeyTests(JobTestCase):
+    def test_test_job_generates_a_masked_secret_key_before_running_tests(self):
+        runs = [step.get("run", "") for step in self.steps("test")]
+        test_index = next(i for i, run in enumerate(runs) if "manage.py test" in run)
+        generators = [
+            run
+            for run in runs[:test_index]
+            if "secrets.token_urlsafe" in run and "DJANGO_SECRET_KEY=" in run
+        ]
+
+        self.assertEqual(len(generators), 1, "no step generates DJANGO_SECRET_KEY before tests")
+        self.assertIn("::add-mask::", generators[0])
+        self.assertIn('>> "$GITHUB_ENV"', generators[0])
+
+    def test_workflow_sets_no_secret_key_literal_and_uses_no_repository_secret(self):
+        data = workflow()
+        envs = [data.get("env", {})]
+        for job in data["jobs"].values():
+            envs.append(job.get("env", {}))
+            envs.extend(step.get("env", {}) for step in job.get("steps", []))
+
+        for env in envs:
+            self.assertNotIn("DJANGO_SECRET_KEY", env)
+        self.assertNotRegex(WORKFLOW_FILE.read_text(), r"\$\{\{\s*secrets\.")

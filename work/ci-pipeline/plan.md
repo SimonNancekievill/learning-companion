@@ -60,7 +60,7 @@
   - test: both jobs have an `actions/setup-python@v7` step whose `with` has `python-version-file: .python-version`, no `python-version`, `cache: pip`, and a `cache-dependency-path` that mentions `requirements-dev.txt`.
   - impl: add the setup-python step to both jobs.
   - covers: AC5
-- [ ] 7. Per-run secret key in the `test` job
+- [x] 7. Per-run secret key in the `test` job
   - test:
     - A step before the `manage.py test` step has a `run:` that contains `secrets.token_urlsafe`, `::add-mask::` and `>> "$GITHUB_ENV"`.
     - The workflow text contains no `secrets.` expression.
