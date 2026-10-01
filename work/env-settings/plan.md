@@ -40,7 +40,7 @@
   - impl: `src/config/settings.py` creates an `environ.Env()`, calls `read_env(BASE_DIR.parent / ".env")`, sets `SECRET_KEY = env("DJANGO_SECRET_KEY")` and deletes the literal.
   - prerequisite before running green: `cp .env.example .env` locally (gitignored, never committed).
   - covers: AC5, AC1, AC8
-- [ ] 3. Guard tests (pass on arrival, `test(...)` commit)
+- [x] 3. Guard tests (pass on arrival, `test(...)` commit)
   - (a) `DJANGO_SECRET_KEY` in the process environment is used.
   - (b) A missing key raises `ImproperlyConfigured`.
   - (c) The process environment beats `.env` for the same variable.

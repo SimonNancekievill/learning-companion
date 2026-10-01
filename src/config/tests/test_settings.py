@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
+from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -40,3 +41,27 @@ class SecretKeyTests(SimpleTestCase):
         settings = load_settings({}, dotenv="DJANGO_SECRET_KEY=from-file\n")
 
         self.assertEqual(settings["SECRET_KEY"], "from-file")
+
+    def test_secret_key_is_read_from_process_environment(self):
+        settings = load_settings({"DJANGO_SECRET_KEY": "from-env"})
+
+        self.assertEqual(settings["SECRET_KEY"], "from-env")
+
+    def test_missing_secret_key_raises_improperly_configured(self):
+        with self.assertRaises(ImproperlyConfigured):
+            load_settings({}, dotenv="")
+
+    def test_process_environment_takes_precedence_over_dotenv(self):
+        settings = load_settings(
+            {"DJANGO_SECRET_KEY": "from-env"}, dotenv="DJANGO_SECRET_KEY=from-file\n"
+        )
+
+        self.assertEqual(settings["SECRET_KEY"], "from-env")
+
+    def test_settings_load_without_a_dotenv_file(self):
+        settings = load_settings({"DJANGO_SECRET_KEY": "from-env"}, dotenv=None)
+
+        self.assertEqual(settings["SECRET_KEY"], "from-env")
+
+    def test_settings_source_contains_no_hardcoded_secret_key(self):
+        self.assertNotIn("django-insecure-", SETTINGS_FILE.read_text())
