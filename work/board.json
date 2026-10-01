@@ -1,0 +1,16 @@
+{
+  "owner": "SimonNancekievill",
+  "repo": "SimonNancekievill/learning-companion",
+  "project_number": 3,
+  "project_id": "PVT_kwHOAs9LYM4BlVdt",
+  "status_field_id": "PVTSSF_lAHOAs9LYM4BlVdtzhkCvhs",
+  "status_options": {
+    "Todo": "d23b947c",
+    "Refined": "1b85a8d4",
+    "Planned": "fe2a45fd",
+    "In progress": "5f5fbb5c",
+    "In review": "7acd3e50",
+    "In develop": "005cc6c8",
+    "Done": "b5549161"
+  }
+}
