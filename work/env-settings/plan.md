@@ -31,7 +31,7 @@
 - **Repo-file tests** (requirements, `.env.example`) resolve the repo root as `Path(__file__).resolve().parents[3]`.
 
 ## Steps
-- [ ] 1. `requirements.txt` pins `django-environ` to an exact version
+- [x] 1. `requirements.txt` pins `django-environ` to an exact version
   - test: `src/config/tests/test_settings.py` (create the `src/config/tests/__init__.py` package). The test asserts a line matching `django-environ==<x.y.z>`.
   - impl: add `django-environ==0.14.0` to `requirements.txt`, then `.venv/bin/pip install -r requirements-dev.txt`.
   - covers: AC9

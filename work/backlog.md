@@ -5,7 +5,7 @@ Queue for `factory-manager`, kept in sync with the GitHub issues and project boa
 as plain `- [ ] <title>: <description>` lines (or as issues on the board); the issue
 number, status and ticket id are filled in by the pipeline — leave them alone.
 
-- [~] #1 (Planned) env-settings: Settings from environment: read SECRET_KEY, DEBUG and ALLOWED_HOSTS from `.env` via django-environ (add to requirements.txt), no secrets left in settings.py, `.env.example` documents every variable
+- [~] #1 (In progress) env-settings: Settings from environment: read SECRET_KEY, DEBUG and ALLOWED_HOSTS from `.env` via django-environ (add to requirements.txt), no secrets left in settings.py, `.env.example` documents every variable
 - [ ] #2 (Todo) CI pipeline: GitHub Actions workflow that installs requirements-dev.txt and runs `ruff check`, `ruff format --check` and the Django test suite on every push and on pull requests into develop and main
 - [ ] #3 (Todo) Base layout and home page: `core` app with a `base.html` template styled with Tailwind via django-tailwind-cli, and a home page at `/` that renders it
 - [ ] #4 (Todo) Sign up: `accounts` app with a sign-up page using Django's UserCreationForm that creates the user and logs them in
