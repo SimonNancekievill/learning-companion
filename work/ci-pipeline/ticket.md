@@ -4,13 +4,13 @@
 As the developer running the AI factory, I want a GitHub Actions workflow that lints and tests every push and every PR into `develop` and `main`, and that branch protection enforces, so that nothing red can reach `develop` or `main`, whether it's merged by `factory-manager` or by hand.
 
 ## Acceptance criteria
-- [ ] AC1 A workflow file `.github/workflows/ci.yml` exists and is valid YAML.
-- [ ] AC2 It triggers on `push` to any branch and on `pull_request` targeting `develop` and `main`.
-- [ ] AC3 It defines a job named `lint` that installs `requirements-dev.txt` and runs `ruff check .` and `ruff format --check .`.
-- [ ] AC4 It defines a job named `test` that installs `requirements-dev.txt` and runs `python src/manage.py test src`.
-- [ ] AC5 Both jobs set up the Python version from `.python-version`, not a hardcoded version.
-- [ ] AC6 The `test` job gets a `DJANGO_SECRET_KEY` generated freshly in each run. The workflow contains no key literal and references no repository secret for it.
-- [ ] AC7 `bash scripts/board.sh protect` requires the status checks `lint` and `test` on both `main` and `develop`. The other protection settings stay as they are.
+- [x] AC1 A workflow file `.github/workflows/ci.yml` exists and is valid YAML.
+- [x] AC2 It triggers on `push` to any branch and on `pull_request` targeting `develop` and `main`.
+- [x] AC3 It defines a job named `lint` that installs `requirements-dev.txt` and runs `ruff check .` and `ruff format --check .`.
+- [x] AC4 It defines a job named `test` that installs `requirements-dev.txt` and runs `python src/manage.py test src`.
+- [x] AC5 Both jobs set up the Python version from `.python-version`, not a hardcoded version.
+- [x] AC6 The `test` job gets a `DJANGO_SECRET_KEY` generated freshly in each run. The workflow contains no key literal and references no repository secret for it.
+- [x] AC7 `bash scripts/board.sh protect` requires the status checks `lint` and `test` on both `main` and `develop`. The other protection settings stay as they are.
 - [ ] AC8 On this ticket's own PR, `gh pr checks` reports `lint` and `test`, both passing.
 
 ## Out of scope
