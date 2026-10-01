@@ -67,7 +67,7 @@
     - No job or step `env:` sets `DJANGO_SECRET_KEY` to a literal.
   - impl: add the generate-key step to `test`.
   - covers: AC6
-- [ ] 8. `board.sh protect` requires `lint` and `test` on main and develop
+- [x] 8. `board.sh protect` requires `lint` and `test` on main and develop
   - test: run the script with the fake `gh`.
     - It must make exactly two `api` calls, to `repos/acme/proj/branches/main/protection` and `.../develop/protection`.
     - Both payloads have `required_status_checks == {"strict": False, "checks": [{"context": "lint"}, {"context": "test"}]}`.
