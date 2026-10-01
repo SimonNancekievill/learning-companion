@@ -36,7 +36,7 @@
 - **AC8 can't be checked before the PR exists.** CI only runs once the branch is pushed, and the push gate opens after `final-review` PASS. `final-review` records AC8 as "verified at delivery". `factory-manager` already refuses to merge on failing or pending checks (`gh pr checks`), and parks on failure, so AC8 is enforced before the PR lands. A red CI run sends the ticket back through `tdd-implement`.
 
 ## Steps
-- [ ] 1. `requirements-dev.txt` pins PyYAML to an exact version
+- [x] 1. `requirements-dev.txt` pins PyYAML to an exact version
   - test: `src/config/tests/test_ci.py` asserts a line matching `PyYAML==<x.y.z>`.
   - impl: add `PyYAML==6.0.3` to `requirements-dev.txt`, then `.venv/bin/pip install -r requirements-dev.txt`.
   - covers: prerequisite for AC1–AC6
