@@ -40,7 +40,7 @@
   - test: `src/config/tests/test_ci.py` asserts a line matching `PyYAML==<x.y.z>`.
   - impl: add `PyYAML==6.0.3` to `requirements-dev.txt`, then `.venv/bin/pip install -r requirements-dev.txt`.
   - covers: prerequisite for AC1–AC6
-- [ ] 2. The workflow file exists and parses as a YAML mapping with a `jobs` mapping
+- [x] 2. The workflow file exists and parses as a YAML mapping with a `jobs` mapping
   - test: `workflow()` returns a dict and `"jobs"` is a dict. It is red because the file is missing.
   - impl: `.github/workflows/ci.yml` with `name: CI` and an empty `jobs: {}`.
   - covers: AC1
