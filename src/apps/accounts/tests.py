@@ -17,6 +17,7 @@ from django.urls import resolve, reverse
 from django.utils.html import escape
 
 from apps.accounts.forms import SignUpForm
+from apps.accounts.models import Profile
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -339,3 +340,33 @@ class ProfileModelTests(TestCase):
         profile = self.profile_model()(user=get_user_model()(username="ada"))
 
         self.assertEqual(str(profile), "ada's profile")
+
+
+class ProfileAutoCreateTests(TestCase):
+    def assert_has_one_empty_profile(self, username: str):
+        profiles = Profile.objects.filter(user__username=username)
+        self.assertEqual(profiles.count(), 1)
+        profile = profiles.get()
+        self.assertEqual((profile.name, profile.cohort, profile.focus_areas), ("", "", []))
+
+    def test_every_new_user_gets_exactly_one_empty_profile(self):
+        users = get_user_model().objects
+        creators = {
+            "create_user": lambda: users.create_user("ada", password=STRONG_PASSWORD),
+            "create_superuser": lambda: users.create_superuser("root", password=STRONG_PASSWORD),
+            "sign-up": lambda: self.client.post(SIGNUP_PATH, sign_up_data(username="grace")),
+        }
+        usernames = {"create_user": "ada", "create_superuser": "root", "sign-up": "grace"}
+        for path, create in creators.items():
+            with self.subTest(path=path):
+                create()
+
+                self.assert_has_one_empty_profile(usernames[path])
+
+    def test_saving_an_existing_user_again_creates_no_second_profile(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        user.first_name = "Ada"
+
+        user.save()
+
+        self.assert_has_one_empty_profile("ada")
