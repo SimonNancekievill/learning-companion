@@ -71,18 +71,24 @@
 
   impl: `src/apps/accounts/admin.py` (`ProfileInline`, `UserAdmin(BaseUserAdmin)` subclass) — covers: AC9
 
+### Review findings (from `work/user-profile/review.md`)
+- [ ] 8. The admin "Add user" page shows no profile inline, so creating a user there cannot hit the duplicate-profile `IntegrityError` (review finding 1, high) — test: `src/apps/accounts/tests.py` (`UserAdminTests`: as a superuser, `GET /admin/accounts/user/add/` → 200 and no `name="profile-0-name"`; POST the add form with username + matching strong passwords plus `profile-0-name=X` → redirect (not 500), exactly one profile for the new user; the change page still shows the inline, covered by the existing test) — impl: `UserAdmin.get_inline_instances` in `src/apps/accounts/admin.py` returns `[]` when `obj is None` — covers: AC9 (hardening)
+- [ ] 9. Raw saves (fixture loading) do not auto-create a profile (review finding 2, medium) — test: `src/apps/accounts/tests.py` (`ProfileAutoCreateTests`: create a user (profile auto-created), `dumpdata accounts.user accounts.profile` to a temp JSON file, delete the user, `loaddata` the file → no exception, exactly one profile for that user, field values preserved) — impl: the receiver in `src/apps/accounts/signals.py` returns early when `kwargs.get("raw")` — covers: AC2 (hardening)
+- [ ] 10. `focus_areas=None` (cleared admin field) is treated as empty and cleaned to `[]` (review finding 3) — test: `src/apps/accounts/tests.py` (`ProfileFocusAreasTests`: `focus_areas = None` → `full_clean()` raises nothing and leaves `focus_areas == []`) — impl: `Profile.clean()` maps `None` to `[]` before the type check — covers: AC6/AC7 (decision recorded)
+- [ ] 11. Tighten two test preconditions (test-only, `test(...)` commit; review findings 5 and 6) — test: `src/apps/accounts/tests.py` (cascade test asserts the profile exists before `user.delete()`, replacing `get_or_create`; backfill test asserts `"old"` has no profile at `0002` before migrating forward) — impl: none — covers: AC4, AC5
+
 ## Coverage
 | AC | Steps |
 |----|-------|
 | AC1 | 1 |
-| AC2 | 3 |
+| AC2 | 3, 9 |
 | AC3 | 3 |
-| AC4 | 1 |
-| AC5 | 4 |
-| AC6 | 5 |
+| AC4 | 1, 11 |
+| AC5 | 4, 11 |
+| AC6 | 5, 10 |
 | AC7 | 6 |
 | AC8 | 2 |
-| AC9 | 7 |
+| AC9 | 7, 8 |
 
 ## Risks
 - **Migration test cost and isolation (step 4):** `TransactionTestCase` flushes tables after the test, and migrating backwards and forwards takes a moment. `tearDown` must always restore the leaf nodes, even if the test fails (via `addCleanup`), or later tests would run against an old schema.
