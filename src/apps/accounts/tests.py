@@ -9,6 +9,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connection, models
 from django.db.migrations.executor import MigrationExecutor
@@ -405,3 +406,23 @@ class ProfileBackfillMigrationTests(TransactionTestCase):
         self.assertEqual((backfilled.name, backfilled.cohort, backfilled.focus_areas), ("", "", []))
         self.assertEqual(NewProfile.objects.filter(user_id=has.pk).count(), 1)
         self.assertEqual(NewProfile.objects.get(user_id=has.pk).name, "Kept")
+
+
+class ProfileFocusAreasTests(TestCase):
+    def setUp(self):
+        self.profile = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD).profile
+
+    def test_full_clean_rejects_malformed_focus_areas(self):
+        cases = {
+            "not a list (str)": "django",
+            "not a list (dict)": {"a": 1},
+            "non-string item": ["ok", 3],
+            "blank item": ["ok", "   "],
+        }
+        for case, value in cases.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                with self.assertRaises(ValidationError) as raised:
+                    self.profile.full_clean()
+                self.assertIn("focus_areas", raised.exception.message_dict)

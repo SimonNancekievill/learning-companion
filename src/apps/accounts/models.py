@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -17,3 +18,10 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"{self.user.get_username()}'s profile"
+
+    def clean(self):
+        tags = self.focus_areas
+        if not isinstance(tags, list):
+            raise ValidationError({"focus_areas": "Focus areas must be a list of tags."})
+        if any(not isinstance(tag, str) or not tag.strip() for tag in tags):
+            raise ValidationError({"focus_areas": "Each focus area must be a non-empty text tag."})
