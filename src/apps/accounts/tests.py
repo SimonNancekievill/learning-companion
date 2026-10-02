@@ -595,3 +595,15 @@ class ProfilePageTests(TestCase):
         ):
             with self.subTest(snippet=snippet):
                 self.assertContains(response, snippet)
+
+    def test_valid_post_saves_own_profile_and_redirects_back(self):
+        data = {"name": "Ada L.", "cohort": "B2", "focus_areas": "Django, , sql, SQL ,"}
+
+        response = self.client.post(PROFILE_PATH, data)
+
+        self.assertRedirects(response, PROFILE_PATH)
+        self.profile.refresh_from_db()
+        self.assertEqual(
+            (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+            ("Ada L.", "B2", ["Django", "sql"]),
+        )

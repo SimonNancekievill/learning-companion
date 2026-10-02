@@ -26,6 +26,7 @@ class SignUpView(CreateView):
 class ProfileView(LoginRequiredMixin, UpdateView):
     form_class = ProfileForm
     template_name = "accounts/profile.html"
+    success_url = reverse_lazy("accounts:profile")
 
     def get_object(self, queryset=None):
         return self.request.user.profile

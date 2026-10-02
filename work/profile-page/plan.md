@@ -54,7 +54,7 @@
 
   impl: `ProfileView` (an `UpdateView` with `get_object` → `request.user.profile`), the `profile/` URL, and `src/apps/accounts/templates/accounts/profile.html` — covers: AC2
 - [x] 4. Anonymous visitors are sent to login — test: `src/apps/accounts/tests.py` (`GET /accounts/profile/` anonymously → `assertRedirects(..., "/accounts/login/?next=/accounts/profile/")`) — impl: `LoginRequiredMixin` on `ProfileView` — covers: AC1
-- [ ] 5. A valid POST saves the requesting user's profile and redirects back — test: `src/apps/accounts/tests.py`:
+- [x] 5. A valid POST saves the requesting user's profile and redirects back — test: `src/apps/accounts/tests.py`:
   - POST name / cohort / `"Django, , sql, SQL ,"` → `assertRedirects(..., "/accounts/profile/")`
   - after `refresh_from_db()` the profile has the new name and cohort and `["Django", "sql"]`
 
