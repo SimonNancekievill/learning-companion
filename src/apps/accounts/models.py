@@ -25,3 +25,9 @@ class Profile(models.Model):
             raise ValidationError({"focus_areas": "Focus areas must be a list of tags."})
         if any(not isinstance(tag, str) or not tag.strip() for tag in tags):
             raise ValidationError({"focus_areas": "Each focus area must be a non-empty text tag."})
+        normalised, seen = [], set()
+        for tag in (tag.strip() for tag in tags):
+            if tag.casefold() not in seen:
+                seen.add(tag.casefold())
+                normalised.append(tag)
+        self.focus_areas = normalised

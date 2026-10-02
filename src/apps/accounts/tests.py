@@ -426,3 +426,16 @@ class ProfileFocusAreasTests(TestCase):
                 with self.assertRaises(ValidationError) as raised:
                     self.profile.full_clean()
                 self.assertIn("focus_areas", raised.exception.message_dict)
+
+    def test_full_clean_trims_and_drops_case_insensitive_duplicates_in_order(self):
+        cases = {
+            "trim and dedupe": ([" Django ", "django", "SQL"], ["Django", "SQL"]),
+            "already clean": (["SQL", "Django"], ["SQL", "Django"]),
+        }
+        for case, (value, expected) in cases.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                self.profile.full_clean()
+
+                self.assertEqual(self.profile.focus_areas, expected)
