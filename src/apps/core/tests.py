@@ -1,4 +1,5 @@
 from django.apps import apps
+from django.template import engines
 from django.test import SimpleTestCase
 from django.urls import reverse
 
@@ -24,3 +25,31 @@ class HomePageTests(SimpleTestCase):
         head = response.content.decode().split("</head>")[0]
 
         self.assertInHTML('<link rel="stylesheet" href="/static/css/tailwind.css">', head)
+
+
+class BaseLayoutTests(SimpleTestCase):
+    def render(self, blocks: str = "") -> str:
+        """Render an inline template that extends base.html and overrides `blocks`."""
+        return engines["django"].from_string('{% extends "base.html" %}' + blocks).render()
+
+    def element(self, html: str, tag: str) -> str:
+        """Return the first <tag>...</tag> element of `html`, failing if it is missing."""
+        self.assertIn(f"<{tag}", html)
+        self.assertIn(f"</{tag}>", html)
+        return html[html.index(f"<{tag}") : html.index(f"</{tag}>") + len(f"</{tag}>")]
+
+    def test_header_links_app_name_to_home(self):
+        header = self.element(self.render(), "header")
+
+        self.assertRegex(header, r'<a href="/"[^>]*>Learning Companion</a>')
+
+    def test_nav_block_is_empty_by_default(self):
+        header = self.element(self.render(), "header")
+
+        self.assertRegex(header, r"<nav[^>]*></nav>")
+
+    def test_nav_block_can_be_overridden_inside_header(self):
+        html = self.render('{% block nav %}<a href="/x">X</a>{% endblock %}')
+        header = self.element(html, "header")
+
+        self.assertRegex(header, r'<nav[^>]*><a href="/x">X</a></nav>')
