@@ -65,7 +65,7 @@
   - an inline template that extends `base.html`, rendered with `{"messages": ["Hello there"]}`, contains "Hello there"
 
   impl: `SuccessMessageMixin` + `success_message` on `ProfileView`, and a `{% if messages %}` list in `src/templates/base.html` — covers: AC4 (message), AC10
-- [ ] 7. Only the requesting user's profile is read or written, and a smuggled `user` field is ignored (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py`:
+- [x] 7. Only the requesting user's profile is read or written, and a smuggled `user` field is ignored (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py`:
   - users `ada` and `bob`; bob's profile has name "Bobby Secret" and cohort "Z9"
   - ada POSTs valid data plus `user=<bob.pk>`
   - afterwards ada's profile still belongs to ada and has the new values

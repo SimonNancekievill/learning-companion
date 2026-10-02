@@ -624,3 +624,20 @@ class ProfilePageTests(TestCase):
         html = template.render({"messages": ["Hello there"]})
 
         self.assertIn("Hello there", html)
+
+    def test_only_the_requesting_users_profile_is_read_or_written(self):
+        bob = get_user_model().objects.create_user("bob", password=STRONG_PASSWORD)
+        bob.profile.name, bob.profile.cohort = "Bobby Secret", "Z9"
+        bob.profile.save()
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django", "user": bob.pk}
+
+        self.client.post(PROFILE_PATH, data)
+        page = self.client.get(PROFILE_PATH)
+
+        self.profile.refresh_from_db()
+        bob.profile.refresh_from_db()
+        self.assertEqual(self.profile.user, self.user)
+        self.assertEqual((self.profile.name, self.profile.cohort), ("Ada", "B1"))
+        self.assertEqual((bob.profile.name, bob.profile.cohort), ("Bobby Secret", "Z9"))
+        self.assertNotContains(page, "Bobby Secret")
+        self.assertNotContains(page, "Z9")
