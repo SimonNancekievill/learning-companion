@@ -1,8 +1,20 @@
+from datetime import UTC, datetime
+from unittest import mock
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.db import models
 from django.test import TestCase
+
+from apps.goals.models import Goal
+
+T1, T2, T3 = (datetime(2026, 10, day, 9, 0, tzinfo=UTC) for day in (1, 2, 3))
+
+
+def at(moment):
+    """Freeze django.utils.timezone.now, which auto_now / auto_now_add read."""
+    return mock.patch("django.utils.timezone.now", return_value=moment)
 
 
 class GoalsAppTests(TestCase):
@@ -54,3 +66,17 @@ class GoalModelTests(TestCase):
 
     def test_str_is_the_title(self):
         self.assertEqual(str(self.goal_model()(title="Learn Django")), "Learn Django")
+
+
+class GoalTimestampTests(TestCase):
+    def test_created_at_is_set_once_and_updated_at_moves_on_save(self):
+        owner = get_user_model().objects.create_user("ada", password="pw-12345-abc")
+        with at(T1):
+            goal = Goal.objects.create(owner=owner, title="Learn Django")
+        created = (goal.created_at, goal.updated_at)
+
+        with at(T2):
+            goal.save()
+
+        self.assertEqual(created, (T1, T1))
+        self.assertEqual((goal.created_at, goal.updated_at), (T1, T2))
