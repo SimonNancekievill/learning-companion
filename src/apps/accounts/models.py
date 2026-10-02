@@ -8,6 +8,10 @@ class User(AbstractUser):
     pass
 
 
+MAX_FOCUS_AREAS = 10
+MAX_FOCUS_AREA_LENGTH = 30
+
+
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
@@ -31,4 +35,10 @@ class Profile(models.Model):
             if tag.casefold() not in seen:
                 seen.add(tag.casefold())
                 normalised.append(tag)
+        if len(normalised) > MAX_FOCUS_AREAS:
+            raise ValidationError({"focus_areas": f"Use at most {MAX_FOCUS_AREAS} focus areas."})
+        if any(len(tag) > MAX_FOCUS_AREA_LENGTH for tag in normalised):
+            raise ValidationError(
+                {"focus_areas": f"Focus areas can be at most {MAX_FOCUS_AREA_LENGTH} characters."}
+            )
         self.focus_areas = normalised

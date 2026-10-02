@@ -15,10 +15,12 @@ from django.core.management import call_command
 from django.db import connection, models
 from django.db.migrations.executor import MigrationExecutor
 from django.shortcuts import resolve_url
+from django.template import engines
 from django.test import TestCase, TransactionTestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
 
+from apps.accounts import forms as account_forms
 from apps.accounts.forms import SignUpForm
 from apps.accounts.models import Profile
 
@@ -102,6 +104,7 @@ class SignUpFormTests(TestCase):
 SIGNUP_PATH = "/accounts/signup/"
 LOGIN_PATH = "/accounts/login/"
 LOGOUT_PATH = "/accounts/logout/"
+PROFILE_PATH = "/accounts/profile/"
 STRONG_PASSWORD = "correct-horse-battery-staple"
 
 
@@ -306,6 +309,19 @@ class NavTests(TestCase):
         self.assertNotIn(f'href="{LOGIN_PATH}"', header)
         self.assertNotIn(f'href="{SIGNUP_PATH}"', header)
 
+    def test_logged_in_username_links_to_the_profile_page(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(user)
+
+        header = self.header(self.client.get("/"))
+
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{PROFILE_PATH}"[^>]*>\s*ada\s*</a>')
+
+    def test_anonymous_nav_has_no_profile_link(self):
+        header = self.header(self.client.get("/"))
+
+        self.assertNotIn(f'href="{PROFILE_PATH}"', header)
+
 
 class AuthPageCrossLinkTests(TestCase):
     def main(self, path: str) -> str:
@@ -504,3 +520,185 @@ class ProfileFocusAreasTests(TestCase):
         self.profile.full_clean()
 
         self.assertEqual(self.profile.focus_areas, [])
+
+    def test_full_clean_caps_focus_areas_at_ten_tags_of_thirty_characters(self):
+        ten_long_tags = [f"{i}".ljust(30, "x") for i in range(10)]
+        rejected = {
+            "eleven tags": [f"tag{i}" for i in range(11)],
+            "tag of 31 characters": ["x" * 31],
+        }
+        accepted = {
+            "ten tags of 30 characters": ten_long_tags,
+            "eleven entries deduping to ten": [*ten_long_tags, ten_long_tags[0].upper()],
+        }
+        for case, value in rejected.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                with self.assertRaises(ValidationError) as raised:
+                    self.profile.full_clean()
+                self.assertIn("focus_areas", raised.exception.message_dict)
+        for case, value in accepted.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                self.profile.full_clean()
+
+                self.assertEqual(self.profile.focus_areas, ten_long_tags)
+
+
+class ProfileFormTests(TestCase):
+    def setUp(self):
+        self.profile = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD).profile
+
+    def profile_form(self):
+        self.assertTrue(hasattr(account_forms, "ProfileForm"), "accounts.forms has no ProfileForm")
+        return account_forms.ProfileForm
+
+    def test_form_edits_exactly_name_cohort_and_focus_areas(self):
+        self.assertEqual(list(self.profile_form()().fields), ["name", "cohort", "focus_areas"])
+
+    def test_focus_areas_are_shown_as_comma_separated_text(self):
+        self.profile.focus_areas = ["Django", "SQL"]
+
+        form = self.profile_form()(instance=self.profile)
+
+        self.assertEqual(form.initial["focus_areas"], "Django, SQL")
+
+    def test_comma_separated_text_is_saved_as_a_clean_list(self):
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django, , sql, SQL ,"}
+        form = self.profile_form()(data, instance=self.profile)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.focus_areas, ["Django", "sql"])
+
+
+class ProfileLoginRequiredTests(TestCase):
+    def test_anonymous_visitor_is_sent_to_login(self):
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertRedirects(response, f"{LOGIN_PATH}?next={PROFILE_PATH}")
+
+
+class ProfilePageTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.profile = self.user.profile
+        self.profile.name, self.profile.cohort = "Ada", "B1"
+        self.profile.focus_areas = ["Django", "SQL"]
+        self.profile.save()
+        self.client.force_login(self.user)
+
+    def test_logged_in_user_sees_their_own_pre_filled_profile(self):
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reverse("accounts:profile"), PROFILE_PATH)
+        self.assertEqual(resolve(PROFILE_PATH).kwargs, {})
+        self.assertTemplateUsed(response, "accounts/profile.html")
+        self.assertTemplateUsed(response, "base.html")
+        for snippet in (
+            "csrfmiddlewaretoken",
+            "<title>Profile</title>",
+            'value="Ada"',
+            'value="B1"',
+            'value="Django, SQL"',
+        ):
+            with self.subTest(snippet=snippet):
+                self.assertContains(response, snippet)
+
+    def test_valid_post_saves_own_profile_and_redirects_back(self):
+        data = {"name": "Ada L.", "cohort": "B2", "focus_areas": "Django, , sql, SQL ,"}
+
+        response = self.client.post(PROFILE_PATH, data)
+
+        self.assertRedirects(response, PROFILE_PATH)
+        self.profile.refresh_from_db()
+        self.assertEqual(
+            (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+            ("Ada L.", "B2", ["Django", "sql"]),
+        )
+
+    def test_saved_message_is_shown_exactly_once(self):
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django"}
+
+        saved = self.client.post(PROFILE_PATH, data, follow=True)
+        again = self.client.get(PROFILE_PATH)
+
+        self.assertContains(saved, "Profile saved.", count=1)
+        self.assertNotContains(again, "Profile saved.")
+
+    def test_base_layout_renders_messages_for_any_page(self):
+        template = engines["django"].from_string('{% extends "base.html" %}')
+
+        html = template.render({"messages": ["Hello there"]})
+
+        self.assertIn("Hello there", html)
+
+    def test_only_the_requesting_users_profile_is_read_or_written(self):
+        bob = get_user_model().objects.create_user("bob", password=STRONG_PASSWORD)
+        bob.profile.name, bob.profile.cohort = "Bobby Secret", "Z9"
+        bob.profile.save()
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django", "user": bob.pk}
+
+        self.client.post(PROFILE_PATH, data)
+        page = self.client.get(PROFILE_PATH)
+
+        self.profile.refresh_from_db()
+        bob.profile.refresh_from_db()
+        self.assertEqual(self.profile.user, self.user)
+        self.assertEqual((self.profile.name, self.profile.cohort), ("Ada", "B1"))
+        self.assertEqual((bob.profile.name, bob.profile.cohort), ("Bobby Secret", "Z9"))
+        self.assertNotContains(page, "Bobby Secret")
+        self.assertNotContains(page, "Z9")
+
+    def test_user_without_a_profile_gets_one_on_first_visit(self):
+        self.profile.delete()
+        user = get_user_model().objects.get(pk=self.user.pk)
+        self.client.force_login(user)
+
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        profiles = Profile.objects.filter(user=user)
+        self.assertEqual(profiles.count(), 1)
+        profile = profiles.get()
+        self.assertEqual((profile.name, profile.cohort, profile.focus_areas), ("", "", []))
+
+    def test_too_many_or_too_long_tags_show_an_error_and_save_nothing(self):
+        cases = {
+            "eleven tags": ", ".join(f"tag{i}" for i in range(11)),
+            "tag of 31 characters": "x" * 31,
+        }
+        for case, focus_areas in cases.items():
+            with self.subTest(case=case):
+                data = {"name": "Changed", "cohort": "C3", "focus_areas": focus_areas}
+
+                response = self.client.post(PROFILE_PATH, data)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, "accounts/profile.html")
+                errors = response.context["form"].errors
+                self.assertIn("focus_areas", errors)
+                self.assertContains(response, escape(errors["focus_areas"][0]))
+                self.profile.refresh_from_db()
+                self.assertEqual(
+                    (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+                    ("Ada", "B1", ["Django", "SQL"]),
+                )
+
+    def test_other_invalid_input_shows_the_error_and_saves_nothing(self):
+        data = {"name": "x" * 101, "cohort": "C3", "focus_areas": "Testing"}
+
+        response = self.client.post(PROFILE_PATH, data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("name", response.context["form"].errors)
+        self.profile.refresh_from_db()
+        self.assertEqual(
+            (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+            ("Ada", "B1", ["Django", "SQL"]),
+        )
