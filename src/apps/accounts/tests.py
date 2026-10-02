@@ -15,6 +15,7 @@ from django.core.management import call_command
 from django.db import connection, models
 from django.db.migrations.executor import MigrationExecutor
 from django.shortcuts import resolve_url
+from django.template import engines
 from django.test import TestCase, TransactionTestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
@@ -607,3 +608,19 @@ class ProfilePageTests(TestCase):
             (self.profile.name, self.profile.cohort, self.profile.focus_areas),
             ("Ada L.", "B2", ["Django", "sql"]),
         )
+
+    def test_saved_message_is_shown_exactly_once(self):
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django"}
+
+        saved = self.client.post(PROFILE_PATH, data, follow=True)
+        again = self.client.get(PROFILE_PATH)
+
+        self.assertContains(saved, "Profile saved.", count=1)
+        self.assertNotContains(again, "Profile saved.")
+
+    def test_base_layout_renders_messages_for_any_page(self):
+        template = engines["django"].from_string('{% extends "base.html" %}')
+
+        html = template.render({"messages": ["Hello there"]})
+
+        self.assertIn("Hello there", html)

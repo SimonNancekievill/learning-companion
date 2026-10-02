@@ -59,7 +59,7 @@
   - after `refresh_from_db()` the profile has the new name and cohort and `["Django", "sql"]`
 
   impl: `success_url = reverse_lazy("accounts:profile")` — covers: AC4
-- [ ] 6. "Profile saved." is shown once, through a messages area in `base.html` — test: `src/apps/accounts/tests.py`:
+- [x] 6. "Profile saved." is shown once, through a messages area in `base.html` — test: `src/apps/accounts/tests.py`:
   - a valid POST with `follow=True` → the body contains "Profile saved." exactly once
   - a second plain GET does not contain it
   - an inline template that extends `base.html`, rendered with `{"messages": ["Hello there"]}`, contains "Hello there"
