@@ -373,7 +373,7 @@ class ProfileModelTests(TestCase):
     def test_deleting_a_user_deletes_their_profile(self):
         profile_model = self.profile_model()
         user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
-        profile_model.objects.get_or_create(user=user)
+        self.assertTrue(profile_model.objects.filter(user=user).exists())
 
         user.delete()
 
@@ -455,6 +455,7 @@ class ProfileBackfillMigrationTests(TransactionTestCase):
         old = OldUser.objects.create(username="old")
         has = OldUser.objects.create(username="has")
         OldProfile.objects.create(user=has, name="Kept")
+        self.assertFalse(OldProfile.objects.filter(user=old).exists())
 
         new_apps = self.migrate([BACKFILL]).loader.project_state([BACKFILL]).apps
 
