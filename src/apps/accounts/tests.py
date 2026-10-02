@@ -149,3 +149,14 @@ class LoginPageTests(TestCase):
 
         self.assertContains(response, "csrfmiddlewaretoken")
         self.assertContains(response, "<title>Log in</title>")
+
+
+class LoginSubmitTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+
+    def test_valid_credentials_log_user_in_and_redirect_home(self):
+        response = self.client.post(LOGIN_PATH, {"username": "ada", "password": STRONG_PASSWORD})
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
