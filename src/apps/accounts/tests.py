@@ -1,4 +1,5 @@
 import re
+import tempfile
 from pathlib import Path
 
 from django.apps import apps
@@ -412,6 +413,22 @@ class ProfileAutoCreateTests(TestCase):
         user.save()
 
         self.assert_has_one_empty_profile("ada")
+
+    def test_loading_a_fixture_with_users_and_profiles_creates_no_duplicates(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        user.profile.name = "Ada"
+        user.profile.save()
+        with tempfile.NamedTemporaryFile(suffix=".json") as fixture:
+            call_command(
+                "dumpdata", "accounts.user", "accounts.profile", output=fixture.name, verbosity=0
+            )
+            user.delete()
+
+            call_command("loaddata", fixture.name, verbosity=0)
+
+        profiles = Profile.objects.filter(user__username="ada")
+        self.assertEqual(profiles.count(), 1)
+        self.assertEqual(profiles.get().name, "Ada")
 
 
 BEFORE_BACKFILL = ("accounts", "0002_profile")
