@@ -4,8 +4,8 @@
 As a learner, I want each of my learning goals stored with a title, description and status, so that later pages can list, filter and track them for me alone.
 
 ## Acceptance criteria
-- [ ] AC1 A `goals` app exists as `apps.goals` (its `AppConfig.name` is `"apps.goals"`) and is registered in `INSTALLED_APPS`.
-- [ ] AC2 `apps.goals.models.Goal` has these fields:
+- [x] AC1 A `goals` app exists as `apps.goals` (its `AppConfig.name` is `"apps.goals"`) and is registered in `INSTALLED_APPS`.
+- [x] AC2 `apps.goals.models.Goal` has these fields:
   - `owner`: a `ForeignKey` to `AUTH_USER_MODEL`, with `related_name="goals"` and `on_delete=CASCADE`
   - `title`: a `CharField`, max 200 characters, required
   - `description`: a `TextField` that may be blank
@@ -14,17 +14,17 @@ As a learner, I want each of my learning goals stored with a title, description 
   - `updated_at`: `auto_now`
 
   Its migration is committed, and `makemigrations --check` reports no changes.
-- [ ] AC3 `created_at` and `updated_at` are set when a goal is created. Saving the goal again leaves `created_at` unchanged and moves `updated_at` forward.
-- [ ] AC4 `Goal.full_clean()` rejects:
+- [x] AC3 `created_at` and `updated_at` are set when a goal is created. Saving the goal again leaves `created_at` unchanged and moves `updated_at` forward.
+- [x] AC4 `Goal.full_clean()` rejects:
   - an empty title
   - a title longer than 200 characters
   - a `status` outside the three choices
 
   It accepts an empty description.
-- [ ] AC5 Deleting a user deletes their goals and leaves other users' goals untouched.
-- [ ] AC6 Goals are ordered by most recently updated first by default: after an older goal is saved again, it comes first in `user.goals.all()`.
-- [ ] AC7 `str(goal)` is the goal's title.
-- [ ] AC8 `Goal` is registered in the admin with:
+- [x] AC5 Deleting a user deletes their goals and leaves other users' goals untouched.
+- [x] AC6 Goals are ordered by most recently updated first by default: after an older goal is saved again, it comes first in `user.goals.all()`.
+- [x] AC7 `str(goal)` is the goal's title.
+- [x] AC8 `Goal` is registered in the admin with:
   - `list_display` of title, owner, status and updated_at
   - `list_filter` on status
   - `search_fields` on title and the owner's username
