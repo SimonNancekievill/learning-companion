@@ -53,7 +53,7 @@
   - re-saving the user (`user.first_name = "Ada"; user.save()`) leaves the count at 1 and raises nothing
 
   impl: `src/apps/accounts/signals.py`, `AccountsConfig.ready()` in `src/apps/accounts/apps.py` — covers: AC2, AC3
-- [ ] 4. A data migration backfills profiles for existing users — test: `src/apps/accounts/tests.py` (`ProfileBackfillMigrationTests(TransactionTestCase)`):
+- [x] 4. A data migration backfills profiles for existing users — test: `src/apps/accounts/tests.py` (`ProfileBackfillMigrationTests(TransactionTestCase)`):
   - assertion first that `("accounts", "0003_backfill_profiles")` is in `executor.loader.graph.nodes`
   - migrate to `0002_profile`
   - with historical models, create user `"old"` without a profile and user `"has"` with a profile `name="Kept"`

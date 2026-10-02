@@ -10,9 +10,10 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.views import LoginView
 from django.core.management import call_command
-from django.db import models
+from django.db import connection, models
+from django.db.migrations.executor import MigrationExecutor
 from django.shortcuts import resolve_url
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
 
@@ -370,3 +371,37 @@ class ProfileAutoCreateTests(TestCase):
         user.save()
 
         self.assert_has_one_empty_profile("ada")
+
+
+BEFORE_BACKFILL = ("accounts", "0002_profile")
+BACKFILL = ("accounts", "0003_backfill_profiles")
+
+
+class ProfileBackfillMigrationTests(TransactionTestCase):
+    def migrate(self, target) -> MigrationExecutor:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(target)
+        return executor
+
+    def migrate_to_latest(self):
+        executor = MigrationExecutor(connection)
+        self.migrate(executor.loader.graph.leaf_nodes())
+
+    def test_backfill_creates_missing_profiles_and_keeps_existing_ones(self):
+        self.assertIn(BACKFILL, MigrationExecutor(connection).loader.graph.nodes)
+        self.addCleanup(self.migrate_to_latest)
+        old_apps = self.migrate([BEFORE_BACKFILL]).loader.project_state([BEFORE_BACKFILL]).apps
+        OldUser = old_apps.get_model("accounts", "User")
+        OldProfile = old_apps.get_model("accounts", "Profile")
+        old = OldUser.objects.create(username="old")
+        has = OldUser.objects.create(username="has")
+        OldProfile.objects.create(user=has, name="Kept")
+
+        new_apps = self.migrate([BACKFILL]).loader.project_state([BACKFILL]).apps
+
+        NewProfile = new_apps.get_model("accounts", "Profile")
+        backfilled = NewProfile.objects.get(user_id=old.pk)
+        self.assertEqual((backfilled.name, backfilled.cohort, backfilled.focus_areas), ("", "", []))
+        self.assertEqual(NewProfile.objects.filter(user_id=has.pk).count(), 1)
+        self.assertEqual(NewProfile.objects.get(user_id=has.pk).name, "Kept")
