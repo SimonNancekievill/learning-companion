@@ -18,3 +18,9 @@ class HomePageTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "core/home.html")
         self.assertTemplateUsed(response, "base.html")
+
+    def test_base_layout_loads_tailwind_stylesheet_in_head(self):
+        response = self.client.get(reverse("core:home"))
+        head = response.content.decode().split("</head>")[0]
+
+        self.assertInHTML('<link rel="stylesheet" href="/static/css/tailwind.css">', head)
