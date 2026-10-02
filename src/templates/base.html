@@ -13,7 +13,7 @@
       <nav class="flex items-center gap-4 text-sm">
         {% block nav %}{% endblock %}
         {% if user.is_authenticated %}
-          <span class="text-slate-600">{{ user.get_username }}</span>
+          <a href="{% url 'accounts:profile' %}" class="text-slate-600 hover:underline">{{ user.get_username }}</a>
           <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
             <button type="submit" class="hover:underline">Log out</button>
@@ -25,7 +25,16 @@
       </nav>
     </div>
   </header>
-  <main class="mx-auto max-w-4xl px-4 py-8">{% block content %}{% endblock %}</main>
+  <main class="mx-auto max-w-4xl px-4 py-8">
+    {% if messages %}
+      <ul class="mb-6 space-y-2">
+        {% for message in messages %}
+          <li class="rounded border border-emerald-200 bg-emerald-50 px-4 py-2 text-emerald-900">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
   <footer class="mx-auto max-w-4xl px-4 py-6 text-sm text-slate-500">
     Learning Companion
   </footer>
