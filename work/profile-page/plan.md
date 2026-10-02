@@ -78,7 +78,7 @@
   - `GET /accounts/profile/` → 200, and exactly one profile now exists for ada, with empty defaults
 
   It's red because `request.user.profile` raises `RelatedObjectDoesNotExist`. impl: `get_object` uses `Profile.objects.get_or_create(user=self.request.user)[0]` — covers: AC6
-- [ ] 9. Posting too many or too long tags shows the error and saves nothing (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py`:
+- [x] 9. Posting too many or too long tags shows the error and saves nothing (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py`:
   - subtests: 11 comma-separated tags, and one 31-character tag
   - each gives status 200, template `accounts/profile.html`, `"focus_areas"` in `form.errors`, the error text in the body, and the profile unchanged after `refresh_from_db()`
 

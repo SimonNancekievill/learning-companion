@@ -654,3 +654,25 @@ class ProfilePageTests(TestCase):
         self.assertEqual(profiles.count(), 1)
         profile = profiles.get()
         self.assertEqual((profile.name, profile.cohort, profile.focus_areas), ("", "", []))
+
+    def test_too_many_or_too_long_tags_show_an_error_and_save_nothing(self):
+        cases = {
+            "eleven tags": ", ".join(f"tag{i}" for i in range(11)),
+            "tag of 31 characters": "x" * 31,
+        }
+        for case, focus_areas in cases.items():
+            with self.subTest(case=case):
+                data = {"name": "Changed", "cohort": "C3", "focus_areas": focus_areas}
+
+                response = self.client.post(PROFILE_PATH, data)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, "accounts/profile.html")
+                errors = response.context["form"].errors
+                self.assertIn("focus_areas", errors)
+                self.assertContains(response, escape(errors["focus_areas"][0]))
+                self.profile.refresh_from_db()
+                self.assertEqual(
+                    (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+                    ("Ada", "B1", ["Django", "SQL"]),
+                )
