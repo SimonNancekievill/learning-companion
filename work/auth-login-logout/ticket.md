@@ -4,17 +4,17 @@
 As a registered user, I want to log in and log out and always see my auth state in the navigation, so that I can come back to my learning data and leave a shared computer safely.
 
 ## Acceptance criteria
-- [ ] AC1 `GET /accounts/login/` (URL name `accounts:login`) returns 200 for an anonymous visitor and renders `accounts/login.html`, which extends `base.html`. The page has a CSRF token and the title "Log in", and is built on Django's built-in `LoginView`.
-- [ ] AC2 A `POST` with valid credentials logs that user in (the session belongs to them) and redirects to `/`.
-- [ ] AC3 A valid `POST` with a safe `next` (e.g. `?next=/accounts/signup/`) redirects there. An unsafe external `next` (e.g. `https://evil.example/`) is ignored and the user goes to `/`.
-- [ ] AC4 A `POST` with wrong credentials returns 200, logs nobody in, and shows Django's "correct username and password" error.
-- [ ] AC5 An already logged-in user who opens the login page is redirected to `/`.
-- [ ] AC6 `settings.LOGIN_URL` resolves to `/accounts/login/`, and `LOGIN_REDIRECT_URL` and `LOGOUT_REDIRECT_URL` resolve to `/`.
-- [ ] AC7 `POST /accounts/logout/` (URL name `accounts:logout`) logs the user out and redirects to `/`. A `GET` to the same URL does not log out (405, session unchanged).
-- [ ] AC8 For an anonymous visitor, the nav (inside `<header>`) shows a "Log in" link to `/accounts/login/` and a "Sign up" link to `/accounts/signup/`, and no log-out control.
-- [ ] AC9 For a logged-in user, the nav shows their username and a "Log out" button inside a `POST` form to `/accounts/logout/` that includes a CSRF token. It shows no "Log in" or "Sign up" links.
-- [ ] AC10 The login page links to the sign-up page ("No account yet? Sign up"), and the sign-up page links to the login page ("Already have an account? Log in").
-- [ ] AC11 End-to-end, a visitor can sign up, log out and log back in with the same credentials, ending up logged in as that user.
+- [x] AC1 `GET /accounts/login/` (URL name `accounts:login`) returns 200 for an anonymous visitor and renders `accounts/login.html`, which extends `base.html`. The page has a CSRF token and the title "Log in", and is built on Django's built-in `LoginView`.
+- [x] AC2 A `POST` with valid credentials logs that user in (the session belongs to them) and redirects to `/`.
+- [x] AC3 A valid `POST` with a safe `next` (e.g. `?next=/accounts/signup/`) redirects there. An unsafe external `next` (e.g. `https://evil.example/`) is ignored and the user goes to `/`.
+- [x] AC4 A `POST` with wrong credentials returns 200, logs nobody in, and shows Django's "correct username and password" error.
+- [x] AC5 An already logged-in user who opens the login page is redirected to `/`.
+- [x] AC6 `settings.LOGIN_URL` resolves to `/accounts/login/`, and `LOGIN_REDIRECT_URL` and `LOGOUT_REDIRECT_URL` resolve to `/`.
+- [x] AC7 `POST /accounts/logout/` (URL name `accounts:logout`) logs the user out and redirects to `/`. A `GET` to the same URL does not log out (405, session unchanged).
+- [x] AC8 For an anonymous visitor, the nav (inside `<header>`) shows a "Log in" link to `/accounts/login/` and a "Sign up" link to `/accounts/signup/`, and no log-out control.
+- [x] AC9 For a logged-in user, the nav shows their username and a "Log out" button inside a `POST` form to `/accounts/logout/` that includes a CSRF token. It shows no "Log in" or "Sign up" links.
+- [x] AC10 The login page links to the sign-up page ("No account yet? Sign up"), and the sign-up page links to the login page ("Already have an account? Log in").
+- [x] AC11 End-to-end, a visitor can sign up, log out and log back in with the same credentials, ending up logged in as that user.
 
 ## Out of scope
 - Password reset and password change.
