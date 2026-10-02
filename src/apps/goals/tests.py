@@ -103,3 +103,16 @@ class GoalValidationTests(TestCase):
 
     def test_full_clean_accepts_an_empty_description(self):
         Goal(owner=self.owner, title="Learn Django", description="").full_clean()
+
+
+class GoalOwnershipTests(TestCase):
+    def test_deleting_a_user_deletes_only_their_goals(self):
+        users = get_user_model().objects
+        ada = users.create_user("ada", password="pw-12345-abc")
+        bob = users.create_user("bob", password="pw-12345-abc")
+        Goal.objects.create(owner=ada, title="Ada's goal")
+        bobs = Goal.objects.create(owner=bob, title="Bob's goal")
+
+        ada.delete()
+
+        self.assertEqual(list(Goal.objects.all()), [bobs])

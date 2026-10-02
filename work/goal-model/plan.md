@@ -48,7 +48,7 @@
   impl: `src/apps/goals/models.py`, `makemigrations goals` → `0001_initial.py` — covers: AC2, AC7
 - [x] 3. Timestamps are set on create, and only `updated_at` moves on save (characterization, `test(...)` commit) — test: `src/apps/goals/tests.py` (patch `django.utils.timezone.now` to T1 for create, then to T2 for a re-save; assert `created_at == T1` both times, and `updated_at` is T1 then T2) — impl: none expected — covers: AC3
 - [x] 4. `full_clean()` rejects bad titles and statuses and accepts an empty description (characterization, `test(...)` commit) — test: `src/apps/goals/tests.py` (subtests: `title=""`, `title="x"*201` and `status="paused"` each raise `ValidationError` with the field key in `message_dict`; a goal with `description=""` and a valid title passes) — impl: none expected — covers: AC4
-- [ ] 5. Deleting a user deletes only their goals (characterization, `test(...)` commit) — test: `src/apps/goals/tests.py` (goals for `ada` and `bob`; deleting `ada` leaves exactly bob's goal) — impl: none expected — covers: AC5
+- [x] 5. Deleting a user deletes only their goals (characterization, `test(...)` commit) — test: `src/apps/goals/tests.py` (goals for `ada` and `bob`; deleting `ada` leaves exactly bob's goal) — impl: none expected — covers: AC5
 - [ ] 6. A user's goals are ordered by most recently updated first — test: `src/apps/goals/tests.py`:
   - create "First" at T1 and "Second" at T2 → `list(user.goals.all()) == [Second, First]`
   - re-save "First" at T3 → `[First, Second]`
