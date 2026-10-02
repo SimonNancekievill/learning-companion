@@ -496,3 +496,10 @@ class ProfileFocusAreasTests(TestCase):
                 self.profile.full_clean()
 
                 self.assertEqual(self.profile.focus_areas, expected)
+
+    def test_full_clean_treats_cleared_focus_areas_as_empty(self):
+        self.profile.focus_areas = None
+
+        self.profile.full_clean()
+
+        self.assertEqual(self.profile.focus_areas, [])

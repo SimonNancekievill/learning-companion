@@ -20,7 +20,8 @@ class Profile(models.Model):
         return f"{self.user.get_username()}'s profile"
 
     def clean(self):
-        tags = self.focus_areas
+        # A cleared form field submits None; the field allows blank, so treat it as no tags.
+        tags = [] if self.focus_areas is None else self.focus_areas
         if not isinstance(tags, list):
             raise ValidationError({"focus_areas": "Focus areas must be a list of tags."})
         if any(not isinstance(tag, str) or not tag.strip() for tag in tags):
