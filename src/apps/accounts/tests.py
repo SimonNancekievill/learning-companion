@@ -5,11 +5,12 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.views import LoginView
 from django.core.management import call_command
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils.html import escape
 
 from apps.accounts.forms import SignUpForm
@@ -52,6 +53,7 @@ class SignUpFormTests(TestCase):
 
 
 SIGNUP_PATH = "/accounts/signup/"
+LOGIN_PATH = "/accounts/login/"
 STRONG_PASSWORD = "correct-horse-battery-staple"
 
 
@@ -129,3 +131,21 @@ class SignUpWhenLoggedInTests(TestCase):
         self.assertRedirects(response, "/")
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+
+class LoginPageTests(TestCase):
+    def test_anonymous_visitor_gets_login_page_from_builtin_login_view(self):
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reverse("accounts:login"), LOGIN_PATH)
+        self.assertIs(resolve(LOGIN_PATH).func.view_class, LoginView)
+        self.assertTemplateUsed(response, "accounts/login.html")
+        self.assertTemplateUsed(response, "base.html")
+        self.assertIsInstance(response.context["form"], AuthenticationForm)
+
+    def test_login_page_has_csrf_token_and_title(self):
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertContains(response, "csrfmiddlewaretoken")
+        self.assertContains(response, "<title>Log in</title>")
