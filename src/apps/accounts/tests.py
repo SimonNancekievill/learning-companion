@@ -9,6 +9,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.core.management import call_command
 from django.test import TestCase
+from django.urls import reverse
 
 from apps.accounts.forms import SignUpForm
 
@@ -47,3 +48,23 @@ class SignUpFormTests(TestCase):
         self.assertTrue(issubclass(SignUpForm, UserCreationForm))
         self.assertIs(SignUpForm._meta.model, get_user_model())
         self.assertEqual(list(SignUpForm().fields), ["username", "password1", "password2"])
+
+
+SIGNUP_PATH = "/accounts/signup/"
+
+
+class SignUpPageTests(TestCase):
+    def test_anonymous_visitor_gets_sign_up_page(self):
+        response = self.client.get(SIGNUP_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reverse("accounts:signup"), SIGNUP_PATH)
+        self.assertTemplateUsed(response, "accounts/signup.html")
+        self.assertTemplateUsed(response, "base.html")
+        self.assertIsInstance(response.context["form"], SignUpForm)
+
+    def test_sign_up_page_has_csrf_token_and_title(self):
+        response = self.client.get(SIGNUP_PATH)
+
+        self.assertContains(response, "csrfmiddlewaretoken")
+        self.assertContains(response, "<title>Sign up</title>")
