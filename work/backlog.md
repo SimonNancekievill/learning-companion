@@ -8,7 +8,7 @@ number, status and ticket id are filled in by the pipeline — leave them alone.
 - [x] #1 (Done) env-settings: Settings from environment: read SECRET_KEY, DEBUG and ALLOWED_HOSTS from `.env` via django-environ (add to requirements.txt), no secrets left in settings.py, `.env.example` documents every variable — work/env-settings/review.md
 - [x] #2 (Done) ci-pipeline: CI pipeline: GitHub Actions workflow that installs requirements-dev.txt and runs `ruff check`, `ruff format --check` and the Django test suite on every push and on pull requests into develop and main — work/ci-pipeline/review.md
 - [x] #3 (Done) base-layout: Base layout and home page: `core` app with a `base.html` template styled with Tailwind via django-tailwind-cli, and a home page at `/` that renders it — work/base-layout/review.md
-- [~] #4 (Planned) accounts-signup: Sign up: `accounts` app with a sign-up page using Django's UserCreationForm that creates the user and logs them in
+- [~] #4 (In progress) accounts-signup: Sign up: `accounts` app with a sign-up page using Django's UserCreationForm that creates the user and logs them in
 - [ ] #5 (Todo) Log in and log out: Django's built-in auth views; the navigation shows log in / sign up or the username and log out depending on auth state
 - [ ] #6 (Todo) Profile model: linked one-to-one to the user with `name`, `cohort` and a list of `focus_area` tags, created automatically for every new user
 - [ ] #7 (Todo) Profile page: view and edit your own profile, login required, never shows another user's data
