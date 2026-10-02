@@ -73,7 +73,7 @@
   - ada's GET page contains neither "Bobby Secret" nor "Z9"
 
   impl: none expected — covers: AC3 (POST), AC5
-- [ ] 8. A logged-in user without a profile gets one on first visit — test: `src/apps/accounts/tests.py`:
+- [x] 8. A logged-in user without a profile gets one on first visit — test: `src/apps/accounts/tests.py`:
   - delete ada's profile (re-fetch the user so the cached relation is gone), then `force_login`
   - `GET /accounts/profile/` → 200, and exactly one profile now exists for ada, with empty defaults
 

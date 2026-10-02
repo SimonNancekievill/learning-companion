@@ -6,6 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, UpdateView
 
 from .forms import ProfileForm, SignUpForm
+from .models import Profile
 
 
 class SignUpView(CreateView):
@@ -31,4 +32,5 @@ class ProfileView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = "Profile saved."
 
     def get_object(self, queryset=None):
-        return self.request.user.profile
+        # Only ever the requesting user's profile; created if missing (e.g. fixture-loaded users).
+        return Profile.objects.get_or_create(user=self.request.user)[0]

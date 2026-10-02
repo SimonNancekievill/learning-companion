@@ -641,3 +641,16 @@ class ProfilePageTests(TestCase):
         self.assertEqual((bob.profile.name, bob.profile.cohort), ("Bobby Secret", "Z9"))
         self.assertNotContains(page, "Bobby Secret")
         self.assertNotContains(page, "Z9")
+
+    def test_user_without_a_profile_gets_one_on_first_visit(self):
+        self.profile.delete()
+        user = get_user_model().objects.get(pk=self.user.pk)
+        self.client.force_login(user)
+
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        profiles = Profile.objects.filter(user=user)
+        self.assertEqual(profiles.count(), 1)
+        profile = profiles.get()
+        self.assertEqual((profile.name, profile.cohort, profile.focus_areas), ("", "", []))
