@@ -34,7 +34,7 @@
 - **Characterization steps:** once the fields from step 2 exist, Django's field machinery already provides three behaviours with no new code: the `auto_now`/`auto_now_add` timestamps (AC3), `full_clean()` validation of blank title, length and choices (AC4), and the cascade on user delete (AC5). Steps 3, 4 and 5 are therefore test-only steps expected to pass on their first run, committed as `test(goal-model): ...`. If one fails, it is fixed minimally in that step and committed as `feat(...)`.
 
 ## Steps
-- [ ] 1. The `goals` app is registered as `apps.goals` — test: `src/apps/goals/tests.py` (`apps.get_app_config("goals").name == "apps.goals"`) — impl: `startapp goals apps/goals` (remove the unused `views.py`, `admin.py` and `models.py` scaffold for now), `src/apps/goals/apps.py`, `INSTALLED_APPS` — covers: AC1
+- [x] 1. The `goals` app is registered as `apps.goals` — test: `src/apps/goals/tests.py` (`apps.get_app_config("goals").name == "apps.goals"`) — impl: `startapp goals apps/goals` (remove the unused `views.py`, `admin.py` and `models.py` scaffold for now), `src/apps/goals/apps.py`, `INSTALLED_APPS` — covers: AC1
 - [ ] 2. The `Goal` model has the agreed fields, choices, default and `__str__`, and its migration is committed — test: `src/apps/goals/tests.py` (`GoalModelTests`):
   - `"goal"` is among the app's models
   - `owner` is a `ForeignKey` to `AUTH_USER_MODEL` with `related_name == "goals"` and `on_delete is CASCADE`
