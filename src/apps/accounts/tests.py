@@ -19,6 +19,7 @@ from django.test import TestCase, TransactionTestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
 
+from apps.accounts import forms as account_forms
 from apps.accounts.forms import SignUpForm
 from apps.accounts.models import Profile
 
@@ -529,3 +530,32 @@ class ProfileFocusAreasTests(TestCase):
                 self.profile.full_clean()
 
                 self.assertEqual(self.profile.focus_areas, ten_long_tags)
+
+
+class ProfileFormTests(TestCase):
+    def setUp(self):
+        self.profile = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD).profile
+
+    def profile_form(self):
+        self.assertTrue(hasattr(account_forms, "ProfileForm"), "accounts.forms has no ProfileForm")
+        return account_forms.ProfileForm
+
+    def test_form_edits_exactly_name_cohort_and_focus_areas(self):
+        self.assertEqual(list(self.profile_form()().fields), ["name", "cohort", "focus_areas"])
+
+    def test_focus_areas_are_shown_as_comma_separated_text(self):
+        self.profile.focus_areas = ["Django", "SQL"]
+
+        form = self.profile_form()(instance=self.profile)
+
+        self.assertEqual(form.initial["focus_areas"], "Django, SQL")
+
+    def test_comma_separated_text_is_saved_as_a_clean_list(self):
+        data = {"name": "Ada", "cohort": "B1", "focus_areas": "Django, , sql, SQL ,"}
+        form = self.profile_form()(data, instance=self.profile)
+
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.focus_areas, ["Django", "sql"])

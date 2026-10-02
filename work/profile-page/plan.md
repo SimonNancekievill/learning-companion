@@ -39,7 +39,7 @@
   - accepted: exactly 10 tags of 30 characters, and 11 entries that dedupe to 10, e.g. 10 tags plus a case-duplicate
 
   impl: `Profile.clean()` in `src/apps/accounts/models.py` — covers: AC7 (model)
-- [ ] 2. `ProfileForm` edits exactly name, cohort and focus areas, as comma-separated text — test: `src/apps/accounts/tests.py` (`ProfileFormTests`):
+- [x] 2. `ProfileForm` edits exactly name, cohort and focus areas, as comma-separated text — test: `src/apps/accounts/tests.py` (`ProfileFormTests`):
   - `hasattr(apps.accounts.forms, "ProfileForm")` is asserted first, so the red is a failure, not an `ImportError`
   - `list(ProfileForm().fields) == ["name", "cohort", "focus_areas"]`
   - an instance with `["Django", "SQL"]` gives `form.initial["focus_areas"] == "Django, SQL"`
