@@ -53,3 +53,12 @@ class BaseLayoutTests(SimpleTestCase):
         header = self.element(html, "header")
 
         self.assertRegex(header, r'<nav[^>]*><a href="/x">X</a></nav>')
+
+    def test_content_block_renders_inside_main(self):
+        html = self.render("{% block content %}<p>Hello</p>{% endblock %}")
+        main = self.element(html, "main")
+
+        self.assertIn("<p>Hello</p>", main)
+
+    def test_layout_has_a_footer(self):
+        self.element(self.render(), "footer")
