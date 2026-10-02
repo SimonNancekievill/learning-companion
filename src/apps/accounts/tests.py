@@ -260,3 +260,22 @@ class NavTests(TestCase):
         self.assertRegex(body, r"<button\b[^>]*>\s*Log out\s*</button>")
         self.assertNotIn(f'href="{LOGIN_PATH}"', header)
         self.assertNotIn(f'href="{SIGNUP_PATH}"', header)
+
+
+class AuthPageCrossLinkTests(TestCase):
+    def main(self, path: str) -> str:
+        html = self.client.get(path).content.decode()
+        self.assertIn("<main", html)
+        return html[html.index("<main") : html.index("</main>")]
+
+    def test_login_page_links_to_sign_up(self):
+        main = self.main(LOGIN_PATH)
+
+        self.assertIn("No account yet?", main)
+        self.assertRegex(main, rf'<a\b[^>]*\bhref="{SIGNUP_PATH}"[^>]*>\s*Sign up\s*</a>')
+
+    def test_sign_up_page_links_to_login(self):
+        main = self.main(SIGNUP_PATH)
+
+        self.assertIn("Already have an account?", main)
+        self.assertRegex(main, rf'<a\b[^>]*\bhref="{LOGIN_PATH}"[^>]*>\s*Log in\s*</a>')
