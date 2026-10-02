@@ -74,6 +74,16 @@ class TestJobTests(JobTestCase):
         self.assertIn("pip install -r requirements-dev.txt", script)
         self.assertIn("python src/manage.py test src", script)
 
+    def test_test_job_builds_tailwind_after_secret_key_and_before_tests(self):
+        runs = [step.get("run", "") for step in self.steps("test")]
+        build = [i for i, run in enumerate(runs) if "python src/manage.py tailwind build" in run]
+        self.assertEqual(len(build), 1, "expected exactly one tailwind build step")
+        key_index = next(i for i, run in enumerate(runs) if "DJANGO_SECRET_KEY=" in run)
+        test_index = next(i for i, run in enumerate(runs) if "manage.py test" in run)
+
+        self.assertLess(key_index, build[0])
+        self.assertLess(build[0], test_index)
+
 
 class PythonSetupTests(JobTestCase):
     def test_jobs_take_python_version_from_file_and_cache_pip(self):
