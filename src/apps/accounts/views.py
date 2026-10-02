@@ -1,4 +1,5 @@
 from django.contrib.auth import login
+from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView
 
@@ -9,6 +10,11 @@ class SignUpView(CreateView):
     form_class = SignUpForm
     template_name = "accounts/signup.html"
     success_url = reverse_lazy("core:home")
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         response = super().form_valid(form)

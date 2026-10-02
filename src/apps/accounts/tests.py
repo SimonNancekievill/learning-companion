@@ -111,3 +111,21 @@ class SignUpSubmitTests(TestCase):
                         self.assertContains(response, escape(message))
                 self.assertEqual(get_user_model().objects.count(), 1)
                 self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+
+class SignUpWhenLoggedInTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(self.user)
+
+    def test_logged_in_user_is_redirected_home_on_get(self):
+        response = self.client.get(SIGNUP_PATH)
+
+        self.assertRedirects(response, "/")
+
+    def test_logged_in_user_post_creates_no_user_and_keeps_session(self):
+        response = self.client.post(SIGNUP_PATH, sign_up_data(username="grace"))
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
