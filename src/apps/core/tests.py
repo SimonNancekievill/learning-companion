@@ -1,3 +1,5 @@
+import re
+
 from django.apps import apps
 from django.template import engines
 from django.test import SimpleTestCase
@@ -25,6 +27,17 @@ class HomePageTests(SimpleTestCase):
         head = response.content.decode().split("</head>")[0]
 
         self.assertInHTML('<link rel="stylesheet" href="/static/css/tailwind.css">', head)
+
+    def test_home_page_shows_heading_and_app_description(self):
+        content = self.client.get(reverse("core:home")).content.decode()
+        main = content[content.index("<main") : content.index("</main>")]
+
+        self.assertRegex(main, r"<h1[^>]*>\s*Learning Companion\s*</h1>")
+        description = re.search(r"<p[^>]*>(.*?)</p>", main, re.S)
+        self.assertIsNotNone(description, "home page has no description paragraph")
+        for topic in ("goals", "sessions", "resources", "next steps"):
+            with self.subTest(topic=topic):
+                self.assertIn(topic, description.group(1))
 
 
 class BaseLayoutTests(SimpleTestCase):
