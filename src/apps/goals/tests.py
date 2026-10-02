@@ -3,6 +3,7 @@ from unittest import mock
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import models
 from django.test import TestCase
@@ -80,3 +81,25 @@ class GoalTimestampTests(TestCase):
 
         self.assertEqual(created, (T1, T1))
         self.assertEqual((goal.created_at, goal.updated_at), (T1, T2))
+
+
+class GoalValidationTests(TestCase):
+    def setUp(self):
+        self.owner = get_user_model().objects.create_user("ada", password="pw-12345-abc")
+
+    def test_full_clean_rejects_bad_title_and_status(self):
+        cases = {
+            "empty title": ({"title": ""}, "title"),
+            "title over 200 characters": ({"title": "x" * 201}, "title"),
+            "unknown status": ({"title": "Learn Django", "status": "paused"}, "status"),
+        }
+        for case, (fields, field) in cases.items():
+            with self.subTest(case=case):
+                goal = Goal(owner=self.owner, **fields)
+
+                with self.assertRaises(ValidationError) as raised:
+                    goal.full_clean()
+                self.assertIn(field, raised.exception.message_dict)
+
+    def test_full_clean_accepts_an_empty_description(self):
+        Goal(owner=self.owner, title="Learn Django", description="").full_clean()
