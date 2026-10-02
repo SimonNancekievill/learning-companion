@@ -3,7 +3,7 @@ from pathlib import Path
 from django.apps import apps
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.auth import get_user_model
+from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AbstractUser
@@ -51,6 +51,15 @@ class SignUpFormTests(TestCase):
 
 
 SIGNUP_PATH = "/accounts/signup/"
+STRONG_PASSWORD = "correct-horse-battery-staple"
+
+
+def sign_up_data(username: str = "ada", password: str = STRONG_PASSWORD, confirm=None) -> dict:
+    return {
+        "username": username,
+        "password1": password,
+        "password2": password if confirm is None else confirm,
+    }
 
 
 class SignUpPageTests(TestCase):
@@ -68,3 +77,15 @@ class SignUpPageTests(TestCase):
 
         self.assertContains(response, "csrfmiddlewaretoken")
         self.assertContains(response, "<title>Sign up</title>")
+
+
+class SignUpSubmitTests(TestCase):
+    def test_valid_sign_up_creates_user_logs_them_in_and_redirects_home(self):
+        response = self.client.post(SIGNUP_PATH, sign_up_data())
+
+        self.assertRedirects(response, "/")
+        user = get_user_model().objects.get()
+        self.assertEqual(user.username, "ada")
+        self.assertNotEqual(user.password, STRONG_PASSWORD)
+        self.assertTrue(user.check_password(STRONG_PASSWORD))
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
