@@ -14,3 +14,6 @@ class Profile(models.Model):
     name = models.CharField(max_length=100, blank=True)
     cohort = models.CharField(max_length=50, blank=True)
     focus_areas = models.JSONField(default=list, blank=True)
+
+    def __str__(self):
+        return f"{self.user.get_username()}'s profile"

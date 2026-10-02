@@ -334,3 +334,8 @@ class ProfileModelTests(TestCase):
         user.delete()
 
         self.assertFalse(profile_model.objects.exists())
+
+    def test_str_names_the_user(self):
+        profile = self.profile_model()(user=get_user_model()(username="ada"))
+
+        self.assertEqual(str(profile), "ada's profile")

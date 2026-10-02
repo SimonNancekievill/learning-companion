@@ -47,7 +47,7 @@
   - deleting a user whose profile was created manually removes the profile
 
   impl: `src/apps/accounts/models.py`, `makemigrations accounts` → `0002_profile.py` — covers: AC1, AC4
-- [ ] 2. `str(profile)` names its user — test: `src/apps/accounts/tests.py` (`str(Profile(user=User(username="ada"))) == "ada's profile"`) — impl: `Profile.__str__` — covers: AC8
+- [x] 2. `str(profile)` names its user — test: `src/apps/accounts/tests.py` (`str(Profile(user=User(username="ada"))) == "ada's profile"`) — impl: `Profile.__str__` — covers: AC8
 - [ ] 3. Every new user gets exactly one empty profile automatically — test: `src/apps/accounts/tests.py` (`ProfileAutoCreateTests`):
   - subtests for `create_user`, `create_superuser` and a POST to `SIGNUP_PATH`: each leaves exactly one `Profile` for that user, with `name == ""`, `cohort == ""` and `focus_areas == []`
   - re-saving the user (`user.first_name = "Ada"; user.save()`) leaves the count at 1 and raises nothing
