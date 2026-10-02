@@ -562,6 +562,13 @@ class ProfileFormTests(TestCase):
         self.assertEqual(self.profile.focus_areas, ["Django", "sql"])
 
 
+class ProfileLoginRequiredTests(TestCase):
+    def test_anonymous_visitor_is_sent_to_login(self):
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertRedirects(response, f"{LOGIN_PATH}?next={PROFILE_PATH}")
+
+
 class ProfilePageTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
