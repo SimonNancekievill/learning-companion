@@ -55,6 +55,7 @@ class SignUpFormTests(TestCase):
 
 SIGNUP_PATH = "/accounts/signup/"
 LOGIN_PATH = "/accounts/login/"
+LOGOUT_PATH = "/accounts/logout/"
 STRONG_PASSWORD = "correct-horse-battery-staple"
 
 
@@ -201,3 +202,26 @@ class AuthSettingsTests(TestCase):
 
     def test_login_redirect_url_resolves_to_home(self):
         self.assertEqual(resolve_url(settings.LOGIN_REDIRECT_URL), "/")
+
+
+class LogoutTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(self.user)
+
+    def test_post_logs_user_out_and_redirects_home(self):
+        response = self.client.post(LOGOUT_PATH)
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(reverse("accounts:logout"), LOGOUT_PATH)
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+    def test_get_is_refused_and_keeps_user_logged_in(self):
+        response = self.client.get(LOGOUT_PATH)
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+    def test_logout_redirect_url_resolves_to_home(self):
+        self.assertIsNotNone(settings.LOGOUT_REDIRECT_URL)
+        self.assertEqual(resolve_url(settings.LOGOUT_REDIRECT_URL), "/")
