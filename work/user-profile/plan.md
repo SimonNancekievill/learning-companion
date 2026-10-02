@@ -64,7 +64,7 @@
   impl: `makemigrations accounts --empty --name backfill_profiles` → `src/apps/accounts/migrations/0003_backfill_profiles.py` (a `RunPython` forward function, `noop` reverse) — covers: AC5
 - [x] 5. `full_clean()` rejects malformed `focus_areas` — test: `src/apps/accounts/tests.py` (`ProfileFocusAreasTests`, subtests over `"django"`, `{"a": 1}`, `["ok", 3]`, `["ok", "   "]` → `ValidationError` whose `message_dict` has the key `"focus_areas"`) — impl: `Profile.clean()` (validation part) — covers: AC6
 - [x] 6. `full_clean()` trims tags and drops case-insensitive duplicates in order — test: `src/apps/accounts/tests.py` (`[" Django ", "django", "SQL"]` → `["Django", "SQL"]` after `full_clean()`; `["SQL", "Django"]` stays as it is) — impl: `Profile.clean()` (normalisation part) — covers: AC7
-- [ ] 7. The profile is edited inline on the User admin page — test: `src/apps/accounts/tests.py` (`UserAdminTests` additions):
+- [x] 7. The profile is edited inline on the User admin page — test: `src/apps/accounts/tests.py` (`UserAdminTests` additions):
   - the registered admin for `User` has an inline whose `model` is `Profile`
   - `admin.site.is_registered(Profile)` is false
   - as a superuser (created via `create_superuser`, which triggers the signal), `GET /admin/accounts/user/<pk>/change/` returns 200 and contains `name="profile-0-name"`, `name="profile-0-cohort"` and `name="profile-0-focus_areas"`

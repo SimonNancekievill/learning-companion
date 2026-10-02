@@ -50,6 +50,23 @@ class UserAdminTests(TestCase):
         self.assertTrue(admin.site.is_registered(user_model))
         self.assertIsInstance(admin.site.get_model_admin(user_model), UserAdmin)
 
+    def test_profile_is_an_inline_on_the_user_admin_and_not_registered_alone(self):
+        user_admin = admin.site.get_model_admin(get_user_model())
+
+        self.assertIn(Profile, [inline.model for inline in user_admin.inlines])
+        self.assertFalse(admin.site.is_registered(Profile))
+
+    def test_user_change_page_shows_profile_fields(self):
+        root = get_user_model().objects.create_superuser("root", password=STRONG_PASSWORD)
+        self.client.force_login(root)
+
+        response = self.client.get(f"/admin/accounts/user/{root.pk}/change/")
+
+        self.assertEqual(response.status_code, 200)
+        for field in ("name", "cohort", "focus_areas"):
+            with self.subTest(field=field):
+                self.assertContains(response, f'name="profile-0-{field}"')
+
 
 class SignUpFormTests(TestCase):
     def test_sign_up_form_is_a_user_creation_form_for_the_custom_user(self):
