@@ -6,6 +6,7 @@ import tempfile
 from pathlib import Path
 from unittest import mock
 
+from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
@@ -34,6 +35,15 @@ class RequirementsTests(SimpleTestCase):
         requirements = (REPO_ROOT / "requirements.txt").read_text()
 
         self.assertRegex(requirements, re.compile(r"^django-environ==\d+\.\d+\.\d+$", re.M))
+
+    def test_django_tailwind_cli_and_its_dependencies_are_pinned_to_exact_versions(self):
+        requirements = (REPO_ROOT / "requirements.txt").read_text()
+
+        for package in ("django-tailwind-cli", "click", "django-click", "semver"):
+            with self.subTest(package=package):
+                pattern = re.compile(rf"^{re.escape(package)}==\d+\.\d+\.\d+$", re.M)
+
+                self.assertRegex(requirements, pattern)
 
 
 class SecretKeyTests(SimpleTestCase):
@@ -92,6 +102,20 @@ class AllowedHostsTests(SimpleTestCase):
                 env = REQUIRED_ENV | ({} if value is None else {"DJANGO_ALLOWED_HOSTS": value})
 
                 self.assertEqual(load_settings(env)["ALLOWED_HOSTS"], expected)
+
+
+class TailwindSettingsTests(SimpleTestCase):
+    def test_django_tailwind_cli_is_installed(self):
+        self.assertIn("django_tailwind_cli", settings.INSTALLED_APPS)
+
+    def test_static_files_are_collected_from_the_assets_directory(self):
+        self.assertEqual(settings.STATICFILES_DIRS, [settings.BASE_DIR / "assets"])
+
+    def test_assets_directory_exists_in_a_fresh_checkout(self):
+        self.assertTrue(Path(settings.STATICFILES_DIRS[0]).is_dir())
+
+    def test_tailwind_version_is_pinned_to_an_exact_v4_release(self):
+        self.assertRegex(settings.TAILWIND_CLI_VERSION, r"^4\.\d+\.\d+$")
 
 
 class EnvExampleTests(SimpleTestCase):

@@ -13,6 +13,10 @@ db.sqlite3-journal
 /media/
 /staticfiles/
 
+# Tailwind (django-tailwind-cli): downloaded binary and generated CSS
+/src/.django_tailwind_cli/
+/src/assets/css/tailwind.css
+
 # Secrets
 .env
 

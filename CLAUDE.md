@@ -21,13 +21,17 @@ Run from the repo root:
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # setup
 cp .env.example .env                                                     # then set DJANGO_SECRET_KEY
-.venv/bin/python src/manage.py runserver                                 # dev server
+.venv/bin/python src/manage.py tailwind runserver                        # dev server + Tailwind watch
+.venv/bin/python src/manage.py tailwind build                            # one-off CSS build (also in CI)
+.venv/bin/python src/manage.py runserver                                 # dev server, no CSS until a build has run
 .venv/bin/python src/manage.py test src                                  # test suite
 .venv/bin/python src/manage.py makemigrations && .venv/bin/python src/manage.py migrate
 .venv/bin/ruff check . && .venv/bin/ruff format --check .                # lint
 ```
 
 `manage.py test` without the `src` argument finds no tests when run from the repo root.
+
+The first Tailwind command downloads the standalone CLI (version pinned by `TAILWIND_CLI_VERSION`) into `src/.django_tailwind_cli/` and writes `src/assets/css/tailwind.css`; both are git-ignored. On macOS with a python.org Python, a `CERTIFICATE_VERIFY_FAILED` download error means Python has no CA bundle: prefix the command with `SSL_CERT_FILE=/etc/ssl/cert.pem`.
 
 ## Layout
 

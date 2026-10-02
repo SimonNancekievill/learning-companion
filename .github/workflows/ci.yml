@@ -42,5 +42,7 @@ jobs:
           key="$(python -c 'import secrets; print(secrets.token_urlsafe(50))')"
           echo "::add-mask::$key"
           echo "DJANGO_SECRET_KEY=$key" >> "$GITHUB_ENV"
+      - name: Build Tailwind CSS
+        run: python src/manage.py tailwind build
       - name: Django tests
         run: python src/manage.py test src
