@@ -35,7 +35,7 @@
 
 ## Steps
 - [x] 1. The `goals` app is registered as `apps.goals` — test: `src/apps/goals/tests.py` (`apps.get_app_config("goals").name == "apps.goals"`) — impl: `startapp goals apps/goals` (remove the unused `views.py`, `admin.py` and `models.py` scaffold for now), `src/apps/goals/apps.py`, `INSTALLED_APPS` — covers: AC1
-- [ ] 2. The `Goal` model has the agreed fields, choices, default and `__str__`, and its migration is committed — test: `src/apps/goals/tests.py` (`GoalModelTests`):
+- [x] 2. The `Goal` model has the agreed fields, choices, default and `__str__`, and its migration is committed — test: `src/apps/goals/tests.py` (`GoalModelTests`):
   - `"goal"` is among the app's models
   - `owner` is a `ForeignKey` to `AUTH_USER_MODEL` with `related_name == "goals"` and `on_delete is CASCADE`
   - `title` has max length 200 and `blank` False
