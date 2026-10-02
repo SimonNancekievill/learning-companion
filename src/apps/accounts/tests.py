@@ -225,3 +225,20 @@ class LogoutTests(TestCase):
     def test_logout_redirect_url_resolves_to_home(self):
         self.assertIsNotNone(settings.LOGOUT_REDIRECT_URL)
         self.assertEqual(resolve_url(settings.LOGOUT_REDIRECT_URL), "/")
+
+
+class NavTests(TestCase):
+    def header(self, response) -> str:
+        """Return the <header>...</header> of a response, failing if it is missing."""
+        html = response.content.decode()
+        self.assertIn("<header", html)
+        self.assertIn("</header>", html)
+        return html[html.index("<header") : html.index("</header>")]
+
+    def test_anonymous_nav_shows_log_in_and_sign_up_links_only(self):
+        header = self.header(self.client.get("/"))
+
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{LOGIN_PATH}"[^>]*>\s*Log in\s*</a>')
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{SIGNUP_PATH}"[^>]*>\s*Sign up\s*</a>')
+        self.assertNotIn("Log out", header)
+        self.assertNotIn(LOGOUT_PATH, header)
