@@ -173,3 +173,14 @@ class LoginSubmitTests(TestCase):
 
                 self.assertRedirects(response, expected, fetch_redirect_response=False)
                 self.client.logout()
+
+    def test_wrong_credentials_log_nobody_in_and_show_error(self):
+        response = self.client.post(LOGIN_PATH, {"username": "ada", "password": "wrong-password"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/login.html")
+        errors = response.context["form"].non_field_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("Please enter a correct username and password", errors[0])
+        self.assertContains(response, "Please enter a correct username and password")
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
