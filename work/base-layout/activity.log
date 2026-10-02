@@ -1,0 +1,3 @@
+2026-10-02T11:39:31+02:00 WRITE work/base-layout/plan.md
+2026-10-02T12:08:24+02:00 WRITE src/config/tests/test_settings.py
+2026-10-02T12:08:25+02:00 TESTS red (after src/config/tests/test_settings.py)

@@ -35,6 +35,15 @@ class RequirementsTests(SimpleTestCase):
 
         self.assertRegex(requirements, re.compile(r"^django-environ==\d+\.\d+\.\d+$", re.M))
 
+    def test_django_tailwind_cli_and_its_dependencies_are_pinned_to_exact_versions(self):
+        requirements = (REPO_ROOT / "requirements.txt").read_text()
+
+        for package in ("django-tailwind-cli", "click", "django-click", "semver"):
+            with self.subTest(package=package):
+                pattern = re.compile(rf"^{re.escape(package)}==\d+\.\d+\.\d+$", re.M)
+
+                self.assertRegex(requirements, pattern)
+
 
 class SecretKeyTests(SimpleTestCase):
     def test_secret_key_is_read_from_dotenv_file(self):
