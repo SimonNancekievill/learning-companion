@@ -116,3 +116,17 @@ class GoalOwnershipTests(TestCase):
         ada.delete()
 
         self.assertEqual(list(Goal.objects.all()), [bobs])
+
+    def test_goals_are_ordered_most_recently_updated_first(self):
+        ada = get_user_model().objects.create_user("ada", password="pw-12345-abc")
+        with at(T1):
+            first = Goal.objects.create(owner=ada, title="First")
+        with at(T2):
+            second = Goal.objects.create(owner=ada, title="Second")
+        before = list(ada.goals.all())
+
+        with at(T3):
+            first.save()
+
+        self.assertEqual(before, [second, first])
+        self.assertEqual(list(ada.goals.all()), [first, second])
