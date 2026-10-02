@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from unittest import mock
 
 from django.apps import apps
+from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
@@ -130,3 +131,25 @@ class GoalOwnershipTests(TestCase):
 
         self.assertEqual(before, [second, first])
         self.assertEqual(list(ada.goals.all()), [first, second])
+
+
+class GoalAdminTests(TestCase):
+    def test_goal_admin_has_columns_filter_and_search(self):
+        self.assertTrue(admin.site.is_registered(Goal))
+        goal_admin = admin.site.get_model_admin(Goal)
+
+        self.assertEqual(list(goal_admin.list_display), ["title", "owner", "status", "updated_at"])
+        self.assertEqual(list(goal_admin.list_filter), ["status"])
+        self.assertEqual(list(goal_admin.search_fields), ["title", "owner__username"])
+
+    def test_superuser_can_search_goals_by_title(self):
+        root = get_user_model().objects.create_superuser("root", password="pw-12345-abc")
+        learn = Goal.objects.create(owner=root, title="Learn Django")
+        Goal.objects.create(owner=root, title="Read SQL book")
+        self.client.force_login(root)
+
+        listing = self.client.get("/admin/goals/goal/")
+        search = self.client.get("/admin/goals/goal/", {"q": "Django"})
+
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(list(search.context["cl"].result_list), [learn])

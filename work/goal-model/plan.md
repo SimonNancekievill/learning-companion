@@ -54,7 +54,7 @@
   - re-save "First" at T3 → `[First, Second]`
 
   It's red without `Meta.ordering`: SQLite returns pk order, so the first assertion sees `[First, Second]`. — impl: `Meta.ordering = ["-updated_at"]` — covers: AC6
-- [ ] 7. `Goal` is in the admin with list columns, a status filter and search — test: `src/apps/goals/tests.py` (`GoalAdminTests`):
+- [x] 7. `Goal` is in the admin with list columns, a status filter and search — test: `src/apps/goals/tests.py` (`GoalAdminTests`):
   - the registered model admin has the planned `list_display`, `list_filter` and `search_fields`
   - as a superuser, `GET /admin/goals/goal/` returns 200
   - `GET /admin/goals/goal/?q=Django` with goals "Learn Django" and "Read SQL book" gives `cl.result_list == ["Learn Django"]`
