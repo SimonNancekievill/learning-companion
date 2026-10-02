@@ -10,3 +10,4 @@
 2026-10-02T12:09:19+02:00 WRITE src/assets/.gitkeep
 2026-10-02T12:09:19+02:00 TESTS green (after src/assets/.gitkeep)
 2026-10-02T12:12:02+02:00 WRITE .github/workflows/ci.yml
+2026-10-02T12:12:18+02:00 WRITE .gitignore
