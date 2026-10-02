@@ -1,4 +1,5 @@
 import re
+import tempfile
 from pathlib import Path
 
 from django.apps import apps
@@ -9,13 +10,17 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.views import LoginView
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
+from django.db import connection, models
+from django.db.migrations.executor import MigrationExecutor
 from django.shortcuts import resolve_url
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
 
 from apps.accounts.forms import SignUpForm
+from apps.accounts.models import Profile
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -45,6 +50,46 @@ class UserAdminTests(TestCase):
 
         self.assertTrue(admin.site.is_registered(user_model))
         self.assertIsInstance(admin.site.get_model_admin(user_model), UserAdmin)
+
+    def test_profile_is_an_inline_on_the_user_admin_and_not_registered_alone(self):
+        user_admin = admin.site.get_model_admin(get_user_model())
+
+        self.assertIn(Profile, [inline.model for inline in user_admin.inlines])
+        self.assertFalse(admin.site.is_registered(Profile))
+
+    def test_user_change_page_shows_profile_fields(self):
+        root = get_user_model().objects.create_superuser("root", password=STRONG_PASSWORD)
+        self.client.force_login(root)
+
+        response = self.client.get(f"/admin/accounts/user/{root.pk}/change/")
+
+        self.assertEqual(response.status_code, 200)
+        for field in ("name", "cohort", "focus_areas"):
+            with self.subTest(field=field):
+                self.assertContains(response, f'name="profile-0-{field}"')
+
+    def test_add_user_page_has_no_profile_inline_and_creates_one_profile(self):
+        root = get_user_model().objects.create_superuser("root", password=STRONG_PASSWORD)
+        self.client.force_login(root)
+        add_path = "/admin/accounts/user/add/"
+
+        page = self.client.get(add_path)
+        response = self.client.post(
+            add_path,
+            {
+                "username": "grace",
+                "password1": STRONG_PASSWORD,
+                "password2": STRONG_PASSWORD,
+                "profile-TOTAL_FORMS": "1",
+                "profile-INITIAL_FORMS": "0",
+                "profile-0-name": "Grace",
+            },
+        )
+
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, 'name="profile-0-name"')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Profile.objects.filter(user__username="grace").count(), 1)
 
 
 class SignUpFormTests(TestCase):
@@ -294,3 +339,168 @@ class AuthFlowTests(TestCase):
 
         self.assertRedirects(response, "/")
         self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
+
+
+class ProfileModelTests(TestCase):
+    def profile_model(self):
+        names = [m._meta.model_name for m in apps.get_app_config("accounts").get_models()]
+        self.assertIn("profile", names)
+        return apps.get_model("accounts", "Profile")
+
+    def test_profile_is_linked_one_to_one_to_the_user_and_cascades(self):
+        user_field = self.profile_model()._meta.get_field("user")
+
+        self.assertIsInstance(user_field, models.OneToOneField)
+        self.assertIs(user_field.related_model, get_user_model())
+        self.assertEqual(user_field.remote_field.related_name, "profile")
+        self.assertIs(user_field.remote_field.on_delete, models.CASCADE)
+
+    def test_profile_fields_may_be_blank_with_expected_limits(self):
+        meta = self.profile_model()._meta
+        name, cohort, focus_areas = (meta.get_field(f) for f in ("name", "cohort", "focus_areas"))
+
+        self.assertEqual((name.max_length, name.blank), (100, True))
+        self.assertEqual((cohort.max_length, cohort.blank), (50, True))
+        self.assertIsInstance(focus_areas, models.JSONField)
+        self.assertIs(focus_areas.default, list)
+        self.assertTrue(focus_areas.blank)
+
+    def test_profile_migration_is_up_to_date(self):
+        self.profile_model()
+
+        call_command("makemigrations", "accounts", check=True, dry_run=True, verbosity=0)
+
+    def test_deleting_a_user_deletes_their_profile(self):
+        profile_model = self.profile_model()
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.assertTrue(profile_model.objects.filter(user=user).exists())
+
+        user.delete()
+
+        self.assertFalse(profile_model.objects.exists())
+
+    def test_str_names_the_user(self):
+        profile = self.profile_model()(user=get_user_model()(username="ada"))
+
+        self.assertEqual(str(profile), "ada's profile")
+
+
+class ProfileAutoCreateTests(TestCase):
+    def assert_has_one_empty_profile(self, username: str):
+        profiles = Profile.objects.filter(user__username=username)
+        self.assertEqual(profiles.count(), 1)
+        profile = profiles.get()
+        self.assertEqual((profile.name, profile.cohort, profile.focus_areas), ("", "", []))
+
+    def test_every_new_user_gets_exactly_one_empty_profile(self):
+        users = get_user_model().objects
+        creators = {
+            "create_user": lambda: users.create_user("ada", password=STRONG_PASSWORD),
+            "create_superuser": lambda: users.create_superuser("root", password=STRONG_PASSWORD),
+            "sign-up": lambda: self.client.post(SIGNUP_PATH, sign_up_data(username="grace")),
+        }
+        usernames = {"create_user": "ada", "create_superuser": "root", "sign-up": "grace"}
+        for path, create in creators.items():
+            with self.subTest(path=path):
+                create()
+
+                self.assert_has_one_empty_profile(usernames[path])
+
+    def test_saving_an_existing_user_again_creates_no_second_profile(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        user.first_name = "Ada"
+
+        user.save()
+
+        self.assert_has_one_empty_profile("ada")
+
+    def test_loading_a_fixture_with_users_and_profiles_creates_no_duplicates(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        user.profile.name = "Ada"
+        user.profile.save()
+        with tempfile.NamedTemporaryFile(suffix=".json") as fixture:
+            call_command(
+                "dumpdata", "accounts.user", "accounts.profile", output=fixture.name, verbosity=0
+            )
+            user.delete()
+
+            call_command("loaddata", fixture.name, verbosity=0)
+
+        profiles = Profile.objects.filter(user__username="ada")
+        self.assertEqual(profiles.count(), 1)
+        self.assertEqual(profiles.get().name, "Ada")
+
+
+BEFORE_BACKFILL = ("accounts", "0002_profile")
+BACKFILL = ("accounts", "0003_backfill_profiles")
+
+
+class ProfileBackfillMigrationTests(TransactionTestCase):
+    def migrate(self, target) -> MigrationExecutor:
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()
+        executor.migrate(target)
+        return executor
+
+    def migrate_to_latest(self):
+        executor = MigrationExecutor(connection)
+        self.migrate(executor.loader.graph.leaf_nodes())
+
+    def test_backfill_creates_missing_profiles_and_keeps_existing_ones(self):
+        self.assertIn(BACKFILL, MigrationExecutor(connection).loader.graph.nodes)
+        self.addCleanup(self.migrate_to_latest)
+        old_apps = self.migrate([BEFORE_BACKFILL]).loader.project_state([BEFORE_BACKFILL]).apps
+        OldUser = old_apps.get_model("accounts", "User")
+        OldProfile = old_apps.get_model("accounts", "Profile")
+        old = OldUser.objects.create(username="old")
+        has = OldUser.objects.create(username="has")
+        OldProfile.objects.create(user=has, name="Kept")
+        self.assertFalse(OldProfile.objects.filter(user=old).exists())
+
+        new_apps = self.migrate([BACKFILL]).loader.project_state([BACKFILL]).apps
+
+        NewProfile = new_apps.get_model("accounts", "Profile")
+        backfilled = NewProfile.objects.get(user_id=old.pk)
+        self.assertEqual((backfilled.name, backfilled.cohort, backfilled.focus_areas), ("", "", []))
+        self.assertEqual(NewProfile.objects.filter(user_id=has.pk).count(), 1)
+        self.assertEqual(NewProfile.objects.get(user_id=has.pk).name, "Kept")
+
+
+class ProfileFocusAreasTests(TestCase):
+    def setUp(self):
+        self.profile = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD).profile
+
+    def test_full_clean_rejects_malformed_focus_areas(self):
+        cases = {
+            "not a list (str)": "django",
+            "not a list (dict)": {"a": 1},
+            "non-string item": ["ok", 3],
+            "blank item": ["ok", "   "],
+        }
+        for case, value in cases.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                with self.assertRaises(ValidationError) as raised:
+                    self.profile.full_clean()
+                self.assertIn("focus_areas", raised.exception.message_dict)
+
+    def test_full_clean_trims_and_drops_case_insensitive_duplicates_in_order(self):
+        cases = {
+            "trim and dedupe": ([" Django ", "django", "SQL"], ["Django", "SQL"]),
+            "already clean": (["SQL", "Django"], ["SQL", "Django"]),
+        }
+        for case, (value, expected) in cases.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                self.profile.full_clean()
+
+                self.assertEqual(self.profile.focus_areas, expected)
+
+    def test_full_clean_treats_cleared_focus_areas_as_empty(self):
+        self.profile.focus_areas = None
+
+        self.profile.full_clean()
+
+        self.assertEqual(self.profile.focus_areas, [])
