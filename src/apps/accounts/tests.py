@@ -309,6 +309,19 @@ class NavTests(TestCase):
         self.assertNotIn(f'href="{LOGIN_PATH}"', header)
         self.assertNotIn(f'href="{SIGNUP_PATH}"', header)
 
+    def test_logged_in_username_links_to_the_profile_page(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(user)
+
+        header = self.header(self.client.get("/"))
+
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{PROFILE_PATH}"[^>]*>\s*ada\s*</a>')
+
+    def test_anonymous_nav_has_no_profile_link(self):
+        header = self.header(self.client.get("/"))
+
+        self.assertNotIn(f'href="{PROFILE_PATH}"', header)
+
 
 class AuthPageCrossLinkTests(TestCase):
     def main(self, path: str) -> str:

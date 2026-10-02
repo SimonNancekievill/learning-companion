@@ -13,7 +13,7 @@
       <nav class="flex items-center gap-4 text-sm">
         {% block nav %}{% endblock %}
         {% if user.is_authenticated %}
-          <span class="text-slate-600">{{ user.get_username }}</span>
+          <a href="{% url 'accounts:profile' %}" class="text-slate-600 hover:underline">{{ user.get_username }}</a>
           <form method="post" action="{% url 'accounts:logout' %}">
             {% csrf_token %}
             <button type="submit" class="hover:underline">Log out</button>

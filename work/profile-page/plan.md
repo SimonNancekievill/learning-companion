@@ -84,7 +84,7 @@
 
   impl: none expected — covers: AC7 (page)
 - [x] 10. Other invalid input re-renders with the error and changes nothing (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py` (POST `name="x" * 101` → 200, `"name"` in `form.errors`, the profile unchanged) — impl: none expected — covers: AC8
-- [ ] 11. The username in the nav links to the profile page — test: `src/apps/accounts/tests.py` (`NavTests`: logged in as ada, the header matches `<a\b[^>]*\bhref="/accounts/profile/"[^>]*>\s*ada\s*</a>`; the anonymous header contains no `href="/accounts/profile/"`) — impl: `src/templates/base.html` — covers: AC9
+- [x] 11. The username in the nav links to the profile page — test: `src/apps/accounts/tests.py` (`NavTests`: logged in as ada, the header matches `<a\b[^>]*\bhref="/accounts/profile/"[^>]*>\s*ada\s*</a>`; the anonymous header contains no `href="/accounts/profile/"`) — impl: `src/templates/base.html` — covers: AC9
 
 ## Coverage
 | AC | Steps |
