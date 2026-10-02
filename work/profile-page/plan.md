@@ -34,7 +34,7 @@
 - **Characterization steps:** once the view uses an explicit-fields ModelForm, rejecting a smuggled `user` field (AC3 POST part / AC5), the view-level cap error (AC7 page part) and the other invalid input (AC8) all work with no new code. Steps 7, 9 and 10 are therefore test-only steps expected to pass on their first run, committed as `test(profile-page): ...`. If one fails, it is fixed minimally in that step and committed as `feat(...)`.
 
 ## Steps
-- [ ] 1. `Profile.full_clean()` caps focus areas at 10 tags of at most 30 characters — test: `src/apps/accounts/tests.py` (`ProfileFocusAreasTests`):
+- [x] 1. `Profile.full_clean()` caps focus areas at 10 tags of at most 30 characters — test: `src/apps/accounts/tests.py` (`ProfileFocusAreasTests`):
   - rejected with a `"focus_areas"` error: 11 distinct tags, and one tag of 31 characters
   - accepted: exactly 10 tags of 30 characters, and 11 entries that dedupe to 10, e.g. 10 tags plus a case-duplicate
 

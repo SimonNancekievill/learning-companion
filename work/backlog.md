@@ -11,7 +11,7 @@ number, status and ticket id are filled in by the pipeline — leave them alone.
 - [x] #4 (Done) accounts-signup: Sign up: `accounts` app with a sign-up page using Django's UserCreationForm that creates the user and logs them in — work/accounts-signup/review.md
 - [x] #5 (Done) auth-login-logout: Log in and log out: Django's built-in auth views; the navigation shows log in / sign up or the username and log out depending on auth state — work/auth-login-logout/review.md
 - [x] #6 (Done) user-profile: Profile model: linked one-to-one to the user with `name`, `cohort` and a list of `focus_area` tags, created automatically for every new user — work/user-profile/review.md
-- [~] #7 (Planned) profile-page: Profile page: view and edit your own profile, login required, never shows another user's data
+- [~] #7 (In progress) profile-page: Profile page: view and edit your own profile, login required, never shows another user's data
 - [ ] #8 (Todo) Goal model: `goals` app with `title`, `description`, `status` (planned / in-progress / done), `created_at`, `updated_at`, owned by a user, with migration and admin registration
 - [ ] #9 (Todo) Goal list and create: logged-in users see only their own goals and can create a new one
 - [ ] #10 (Todo) Goal detail, edit and delete: scoped to the owner, other users' goals return 404

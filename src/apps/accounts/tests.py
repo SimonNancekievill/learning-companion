@@ -504,3 +504,28 @@ class ProfileFocusAreasTests(TestCase):
         self.profile.full_clean()
 
         self.assertEqual(self.profile.focus_areas, [])
+
+    def test_full_clean_caps_focus_areas_at_ten_tags_of_thirty_characters(self):
+        ten_long_tags = [f"{i}".ljust(30, "x") for i in range(10)]
+        rejected = {
+            "eleven tags": [f"tag{i}" for i in range(11)],
+            "tag of 31 characters": ["x" * 31],
+        }
+        accepted = {
+            "ten tags of 30 characters": ten_long_tags,
+            "eleven entries deduping to ten": [*ten_long_tags, ten_long_tags[0].upper()],
+        }
+        for case, value in rejected.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                with self.assertRaises(ValidationError) as raised:
+                    self.profile.full_clean()
+                self.assertIn("focus_areas", raised.exception.message_dict)
+        for case, value in accepted.items():
+            with self.subTest(case=case):
+                self.profile.focus_areas = value
+
+                self.profile.full_clean()
+
+                self.assertEqual(self.profile.focus_areas, ten_long_tags)
