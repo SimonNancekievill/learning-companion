@@ -61,9 +61,9 @@ class BaseLayoutTests(SimpleTestCase):
 
     def test_nav_block_can_be_overridden_inside_header(self):
         html = self.render('{% block nav %}<a href="/x">X</a>{% endblock %}')
-        header = self.element(html, "header")
+        nav = self.element(self.element(html, "header"), "nav")
 
-        self.assertRegex(header, r'<nav[^>]*><a href="/x">X</a></nav>')
+        self.assertIn('<a href="/x">X</a>', nav)
 
     def test_content_block_renders_inside_main(self):
         html = self.render("{% block content %}<p>Hello</p>{% endblock %}")

@@ -39,6 +39,7 @@
 - [x] 6. A logged-in user is redirected away from the login page — test: `src/apps/accounts/tests.py` (`force_login`, then GET `/accounts/login/` → `assertRedirects(..., "/")`) — impl: `redirect_authenticated_user=True` in `src/apps/accounts/urls.py` — covers: AC5
 - [x] 7. `LOGIN_URL` names the login route — test: `src/apps/accounts/tests.py` (`AuthSettingsTests`: `settings.LOGIN_URL == "accounts:login"` and `resolve_url(settings.LOGIN_URL) == "/accounts/login/"`; `resolve_url(settings.LOGIN_REDIRECT_URL) == "/"`) — impl: `LOGIN_URL = "accounts:login"` in `src/config/settings.py` — covers: AC6
 - [x] 8. POST logout logs out and redirects home, and GET is refused — test: `src/apps/accounts/tests.py` (`LogoutTests`: `reverse("accounts:logout") == "/accounts/logout/"`; logged in, POST → `assertRedirects(..., "/")` and `session.get(SESSION_KEY)` is `None`; logged in, GET → 405 and the session still holds the user; `resolve_url(settings.LOGOUT_REDIRECT_URL) == "/"`) — impl: `src/apps/accounts/urls.py` (`logout/`, `LogoutView`), `LOGOUT_REDIRECT_URL = "core:home"` — covers: AC7, AC6
+- [x] 8a. Reword the base-layout nav-override test to its lasting intent (test-only, green before and after, `test(...)` commit; added during implementation: `test_nav_block_can_be_overridden_inside_header` asserts `<nav>` contains *exactly* the override, which step 9's auth links break) — test: `src/apps/core/tests.py` (keep the name; assert the override link renders inside the header's `<nav>…</nav>` element instead of matching the whole element) — impl: none — covers: keeps base-layout AC5 tested
 - [ ] 9. Anonymous nav shows "Log in" and "Sign up" and no log-out control — test: `src/apps/accounts/tests.py` (`NavTests`, `TestCase`: GET `/`, cut out `<header>…</header>`; regex links `<a\b[^>]*href="/accounts/login/"[^>]*>\s*Log in\s*</a>` and `href="/accounts/signup/"` … `Sign up`; `"Log out"` and `/accounts/logout/` not in the header) — impl: `src/templates/base.html` — covers: AC8
 - [ ] 10. Logged-in nav shows the username and a POST log-out form with CSRF, and no login/sign-up links — test: `src/apps/accounts/tests.py` (`NavTests`: `force_login(user "ada")`, GET `/`, cut out the header; contains `ada`; a `<form` with `method="post"` and `action="/accounts/logout/"` containing `csrfmiddlewaretoken` and a `<button` … `Log out`; `href="/accounts/login/"` and `href="/accounts/signup/"` absent) — impl: `src/templates/base.html` — covers: AC9
 - [ ] 11. The login and sign-up pages link to each other — test: `src/apps/accounts/tests.py` (the `<main>` of the login page contains a link to `/accounts/signup/` with text "Sign up" and the copy "No account yet?"; the `<main>` of the sign-up page contains a link to `/accounts/login/` with text "Log in" and the copy "Already have an account?") — impl: `accounts/login.html`, `accounts/signup.html` — covers: AC10
@@ -54,7 +55,7 @@
 | AC5 | 6 |
 | AC6 | 3, 7, 8 |
 | AC7 | 8 |
-| AC8 | 9 |
+| AC8 | 8a, 9 |
 | AC9 | 10 |
 | AC10 | 11 |
 | AC11 | 12 |
