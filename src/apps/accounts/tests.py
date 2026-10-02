@@ -2,7 +2,9 @@ from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
+from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import AbstractUser
 from django.core.management import call_command
 from django.test import TestCase
@@ -27,3 +29,11 @@ class UserModelTests(TestCase):
         self.assertTrue((APP_DIR / "migrations" / "0001_initial.py").is_file())
 
         call_command("makemigrations", "accounts", check=True, dry_run=True, verbosity=0)
+
+
+class UserAdminTests(TestCase):
+    def test_user_is_registered_in_admin_with_user_admin(self):
+        user_model = get_user_model()
+
+        self.assertTrue(admin.site.is_registered(user_model))
+        self.assertIsInstance(admin.site.get_model_admin(user_model), UserAdmin)
