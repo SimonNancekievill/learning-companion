@@ -34,7 +34,7 @@
 - [x] 9. The home page shows the "Learning Companion" heading and a description of the app — test: `src/apps/core/tests.py` (response contains `<h1` … `Learning Companion`, and a `<p>` that mentions "goals", "sessions", "resources" and "next steps") — impl: `src/apps/core/templates/core/home.html` — covers: AC7
 - [x] 10. The CI test job builds Tailwind before running the tests — test: `src/config/tests/test_ci.py` (`TestJobTests`: `python src/manage.py tailwind build` is in `run_script("test")`, and its step index is after the secret-key step and before the `manage.py test` step) — impl: `.github/workflows/ci.yml` — covers: AC9
 - [x] 11. The Tailwind binary and generated CSS are git-ignored — test: new `src/config/tests/test_repo.py` (`SimpleTestCase` reading `REPO_ROOT / ".gitignore"` lines; asserts `/src/assets/css/tailwind.css` and `/src/.django_tailwind_cli/` are present) — impl: `.gitignore` — covers: AC10
-- [ ] 12. Docs (no test, `docs(base-layout)` commit) — add the Tailwind commands to `CLAUDE.md` Commands: `.venv/bin/python src/manage.py tailwind runserver` (dev server with CSS watch) and `.venv/bin/python src/manage.py tailwind build`. Also note that the plain `runserver` still works but serves no CSS until a build has run.
+- [x] 12. Docs (no test, `docs(base-layout)` commit) — add the Tailwind commands to `CLAUDE.md` Commands: `.venv/bin/python src/manage.py tailwind runserver` (dev server with CSS watch) and `.venv/bin/python src/manage.py tailwind build`. Also note that the plain `runserver` still works but serves no CSS until a build has run.
 
 ## Coverage
 | AC | Steps |
