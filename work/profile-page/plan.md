@@ -46,7 +46,7 @@
   - a bound form with `focus_areas="Django, , sql, SQL ,"` is valid, and `save()` stores `["Django", "sql"]`
 
   impl: `ProfileForm` in `src/apps/accounts/forms.py` — covers: AC3 (form), AC4 (parsing)
-- [ ] 3. A logged-in user sees their own pre-filled profile page — test: `src/apps/accounts/tests.py` (`ProfilePageTests`):
+- [x] 3. A logged-in user sees their own pre-filled profile page — test: `src/apps/accounts/tests.py` (`ProfilePageTests`):
   - logged in as `ada`, with a profile of name "Ada", cohort "B1" and `["Django", "SQL"]`
   - `GET /accounts/profile/` → 200 with templates `accounts/profile.html` and `base.html`
   - `reverse("accounts:profile") == "/accounts/profile/"` and `resolve(...).kwargs == {}`

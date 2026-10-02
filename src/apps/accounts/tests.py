@@ -103,6 +103,7 @@ class SignUpFormTests(TestCase):
 SIGNUP_PATH = "/accounts/signup/"
 LOGIN_PATH = "/accounts/login/"
 LOGOUT_PATH = "/accounts/logout/"
+PROFILE_PATH = "/accounts/profile/"
 STRONG_PASSWORD = "correct-horse-battery-staple"
 
 
@@ -559,3 +560,31 @@ class ProfileFormTests(TestCase):
 
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.focus_areas, ["Django", "sql"])
+
+
+class ProfilePageTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.profile = self.user.profile
+        self.profile.name, self.profile.cohort = "Ada", "B1"
+        self.profile.focus_areas = ["Django", "SQL"]
+        self.profile.save()
+        self.client.force_login(self.user)
+
+    def test_logged_in_user_sees_their_own_pre_filled_profile(self):
+        response = self.client.get(PROFILE_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reverse("accounts:profile"), PROFILE_PATH)
+        self.assertEqual(resolve(PROFILE_PATH).kwargs, {})
+        self.assertTemplateUsed(response, "accounts/profile.html")
+        self.assertTemplateUsed(response, "base.html")
+        for snippet in (
+            "csrfmiddlewaretoken",
+            "<title>Profile</title>",
+            'value="Ada"',
+            'value="B1"',
+            'value="Django, SQL"',
+        ):
+            with self.subTest(snippet=snippet):
+                self.assertContains(response, snippet)

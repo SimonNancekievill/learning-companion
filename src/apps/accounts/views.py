@@ -1,9 +1,9 @@
 from django.contrib.auth import login
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView
+from django.views.generic import CreateView, UpdateView
 
-from .forms import SignUpForm
+from .forms import ProfileForm, SignUpForm
 
 
 class SignUpView(CreateView):
@@ -20,3 +20,11 @@ class SignUpView(CreateView):
         response = super().form_valid(form)
         login(self.request, self.object)
         return response
+
+
+class ProfileView(UpdateView):
+    form_class = ProfileForm
+    template_name = "accounts/profile.html"
+
+    def get_object(self, queryset=None):
+        return self.request.user.profile
