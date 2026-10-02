@@ -184,3 +184,10 @@ class LoginSubmitTests(TestCase):
         self.assertIn("Please enter a correct username and password", errors[0])
         self.assertContains(response, "Please enter a correct username and password")
         self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+    def test_logged_in_user_is_redirected_home_from_login_page(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertRedirects(response, "/")
