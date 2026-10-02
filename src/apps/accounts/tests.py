@@ -9,6 +9,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.views import LoginView
 from django.core.management import call_command
+from django.shortcuts import resolve_url
 from django.test import TestCase
 from django.urls import resolve, reverse
 from django.utils.html import escape
@@ -191,3 +192,12 @@ class LoginSubmitTests(TestCase):
         response = self.client.get(LOGIN_PATH)
 
         self.assertRedirects(response, "/")
+
+
+class AuthSettingsTests(TestCase):
+    def test_login_url_names_the_login_route(self):
+        self.assertEqual(settings.LOGIN_URL, "accounts:login")
+        self.assertEqual(resolve_url(settings.LOGIN_URL), LOGIN_PATH)
+
+    def test_login_redirect_url_resolves_to_home(self):
+        self.assertEqual(resolve_url(settings.LOGIN_REDIRECT_URL), "/")
