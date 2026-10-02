@@ -10,6 +10,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.html import escape
 
 from apps.accounts.forms import SignUpForm
 
@@ -89,3 +90,24 @@ class SignUpSubmitTests(TestCase):
         self.assertNotEqual(user.password, STRONG_PASSWORD)
         self.assertTrue(user.check_password(STRONG_PASSWORD))
         self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
+
+    def test_invalid_sign_up_creates_no_user_and_re_renders_form_with_errors(self):
+        get_user_model().objects.create_user("taken", password=STRONG_PASSWORD)
+        cases = {
+            "mismatched passwords": sign_up_data(confirm="something-else-entirely"),
+            "password rejected by validators": sign_up_data(password="12345678"),
+            "existing username in another case": sign_up_data(username="TAKEN"),
+        }
+        for case, data in cases.items():
+            with self.subTest(case=case):
+                response = self.client.post(SIGNUP_PATH, data)
+
+                self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, "accounts/signup.html")
+                errors = response.context["form"].errors
+                self.assertTrue(errors)
+                for messages in errors.values():
+                    for message in messages:
+                        self.assertContains(response, escape(message))
+                self.assertEqual(get_user_model().objects.count(), 1)
+                self.assertIsNone(self.client.session.get(SESSION_KEY))
