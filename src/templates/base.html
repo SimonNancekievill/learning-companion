@@ -10,7 +10,19 @@
   <header class="border-b border-slate-200 bg-white">
     <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
       <a href="{% url 'core:home' %}" class="text-lg font-semibold">Learning Companion</a>
-      <nav class="flex items-center gap-4 text-sm">{% block nav %}{% endblock %}</nav>
+      <nav class="flex items-center gap-4 text-sm">
+        {% block nav %}{% endblock %}
+        {% if user.is_authenticated %}
+          <span class="text-slate-600">{{ user.get_username }}</span>
+          <form method="post" action="{% url 'accounts:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="hover:underline">Log out</button>
+          </form>
+        {% else %}
+          <a href="{% url 'accounts:login' %}" class="hover:underline">Log in</a>
+          <a href="{% url 'accounts:signup' %}" class="rounded bg-slate-900 px-3 py-1.5 font-semibold text-white">Sign up</a>
+        {% endif %}
+      </nav>
     </div>
   </header>
   <main class="mx-auto max-w-4xl px-4 py-8">{% block content %}{% endblock %}</main>

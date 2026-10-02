@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from django.apps import apps
@@ -5,11 +6,13 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import SESSION_KEY, get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.views import LoginView
 from django.core.management import call_command
+from django.shortcuts import resolve_url
 from django.test import TestCase
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils.html import escape
 
 from apps.accounts.forms import SignUpForm
@@ -52,6 +55,8 @@ class SignUpFormTests(TestCase):
 
 
 SIGNUP_PATH = "/accounts/signup/"
+LOGIN_PATH = "/accounts/login/"
+LOGOUT_PATH = "/accounts/logout/"
 STRONG_PASSWORD = "correct-horse-battery-staple"
 
 
@@ -129,3 +134,163 @@ class SignUpWhenLoggedInTests(TestCase):
         self.assertRedirects(response, "/")
         self.assertEqual(get_user_model().objects.count(), 1)
         self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+
+class LoginPageTests(TestCase):
+    def test_anonymous_visitor_gets_login_page_from_builtin_login_view(self):
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(reverse("accounts:login"), LOGIN_PATH)
+        self.assertIs(resolve(LOGIN_PATH).func.view_class, LoginView)
+        self.assertTemplateUsed(response, "accounts/login.html")
+        self.assertTemplateUsed(response, "base.html")
+        self.assertIsInstance(response.context["form"], AuthenticationForm)
+
+    def test_login_page_has_csrf_token_and_title(self):
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertContains(response, "csrfmiddlewaretoken")
+        self.assertContains(response, "<title>Log in</title>")
+
+
+class LoginSubmitTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+
+    def test_valid_credentials_log_user_in_and_redirect_home(self):
+        response = self.client.post(LOGIN_PATH, {"username": "ada", "password": STRONG_PASSWORD})
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+    def test_safe_next_is_followed_and_unsafe_next_is_ignored(self):
+        credentials = {"username": "ada", "password": STRONG_PASSWORD}
+        cases = {
+            f"{LOGIN_PATH}?next={SIGNUP_PATH}": SIGNUP_PATH,
+            f"{LOGIN_PATH}?next=https://evil.example/": "/",
+        }
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                response = self.client.post(url, credentials)
+
+                self.assertRedirects(response, expected, fetch_redirect_response=False)
+                self.client.logout()
+
+    def test_wrong_credentials_log_nobody_in_and_show_error(self):
+        response = self.client.post(LOGIN_PATH, {"username": "ada", "password": "wrong-password"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/login.html")
+        errors = response.context["form"].non_field_errors()
+        self.assertEqual(len(errors), 1)
+        self.assertIn("Please enter a correct username and password", errors[0])
+        self.assertContains(response, "Please enter a correct username and password")
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+    def test_logged_in_user_is_redirected_home_from_login_page(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(LOGIN_PATH)
+
+        self.assertRedirects(response, "/")
+
+
+class AuthSettingsTests(TestCase):
+    def test_login_url_names_the_login_route(self):
+        self.assertEqual(settings.LOGIN_URL, "accounts:login")
+        self.assertEqual(resolve_url(settings.LOGIN_URL), LOGIN_PATH)
+
+    def test_login_redirect_url_resolves_to_home(self):
+        self.assertEqual(resolve_url(settings.LOGIN_REDIRECT_URL), "/")
+
+
+class LogoutTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(self.user)
+
+    def test_post_logs_user_out_and_redirects_home(self):
+        response = self.client.post(LOGOUT_PATH)
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(reverse("accounts:logout"), LOGOUT_PATH)
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+    def test_get_is_refused_and_keeps_user_logged_in(self):
+        response = self.client.get(LOGOUT_PATH)
+
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+    def test_logout_redirect_url_resolves_to_home(self):
+        self.assertIsNotNone(settings.LOGOUT_REDIRECT_URL)
+        self.assertEqual(resolve_url(settings.LOGOUT_REDIRECT_URL), "/")
+
+
+class NavTests(TestCase):
+    def header(self, response) -> str:
+        """Return the <header>...</header> of a response, failing if it is missing."""
+        html = response.content.decode()
+        self.assertIn("<header", html)
+        self.assertIn("</header>", html)
+        return html[html.index("<header") : html.index("</header>")]
+
+    def test_anonymous_nav_shows_log_in_and_sign_up_links_only(self):
+        header = self.header(self.client.get("/"))
+
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{LOGIN_PATH}"[^>]*>\s*Log in\s*</a>')
+        self.assertRegex(header, rf'<a\b[^>]*\bhref="{SIGNUP_PATH}"[^>]*>\s*Sign up\s*</a>')
+        self.assertNotIn("Log out", header)
+        self.assertNotIn(LOGOUT_PATH, header)
+
+    def test_logged_in_nav_shows_username_and_post_log_out_form_only(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(user)
+
+        header = self.header(self.client.get("/"))
+
+        self.assertIn("ada", header)
+        form = re.search(r"<form\b([^>]*)>(.*?)</form>", header, re.S)
+        self.assertIsNotNone(form, "nav has no log-out form")
+        attributes, body = form.groups()
+        self.assertRegex(attributes, r'\bmethod="post"')
+        self.assertRegex(attributes, rf'\baction="{LOGOUT_PATH}"')
+        self.assertIn("csrfmiddlewaretoken", body)
+        self.assertRegex(body, r"<button\b[^>]*>\s*Log out\s*</button>")
+        self.assertNotIn(f'href="{LOGIN_PATH}"', header)
+        self.assertNotIn(f'href="{SIGNUP_PATH}"', header)
+
+
+class AuthPageCrossLinkTests(TestCase):
+    def main(self, path: str) -> str:
+        html = self.client.get(path).content.decode()
+        self.assertIn("<main", html)
+        return html[html.index("<main") : html.index("</main>")]
+
+    def test_login_page_links_to_sign_up(self):
+        main = self.main(LOGIN_PATH)
+
+        self.assertIn("No account yet?", main)
+        self.assertRegex(main, rf'<a\b[^>]*\bhref="{SIGNUP_PATH}"[^>]*>\s*Sign up\s*</a>')
+
+    def test_sign_up_page_links_to_login(self):
+        main = self.main(SIGNUP_PATH)
+
+        self.assertIn("Already have an account?", main)
+        self.assertRegex(main, rf'<a\b[^>]*\bhref="{LOGIN_PATH}"[^>]*>\s*Log in\s*</a>')
+
+
+class AuthFlowTests(TestCase):
+    def test_visitor_can_sign_up_log_out_and_log_back_in(self):
+        self.client.post(SIGNUP_PATH, sign_up_data(username="grace"))
+        user = get_user_model().objects.get(username="grace")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
+
+        self.client.post(LOGOUT_PATH)
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+        response = self.client.post(LOGIN_PATH, {"username": "grace", "password": STRONG_PASSWORD})
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))

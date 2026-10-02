@@ -1,0 +1,4 @@
+2026-10-02T14:20:32+02:00 WRITE work/auth-login-logout/plan.md
+2026-10-02T14:22:25+02:00 WRITE src/apps/core/tests.py
+2026-10-02T14:22:26+02:00 TESTS green (after src/apps/core/tests.py)
+2026-10-02T14:47:03+02:00 WRITE work/auth-login-logout/review.md
