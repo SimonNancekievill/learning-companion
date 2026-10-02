@@ -279,3 +279,18 @@ class AuthPageCrossLinkTests(TestCase):
 
         self.assertIn("Already have an account?", main)
         self.assertRegex(main, rf'<a\b[^>]*\bhref="{LOGIN_PATH}"[^>]*>\s*Log in\s*</a>')
+
+
+class AuthFlowTests(TestCase):
+    def test_visitor_can_sign_up_log_out_and_log_back_in(self):
+        self.client.post(SIGNUP_PATH, sign_up_data(username="grace"))
+        user = get_user_model().objects.get(username="grace")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
+
+        self.client.post(LOGOUT_PATH)
+        self.assertIsNone(self.client.session.get(SESSION_KEY))
+
+        response = self.client.post(LOGIN_PATH, {"username": "grace", "password": STRONG_PASSWORD})
+
+        self.assertRedirects(response, "/")
+        self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
