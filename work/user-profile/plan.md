@@ -39,7 +39,7 @@
   - `class UserAdmin(BaseUserAdmin)` with `inlines = [ProfileInline]`, registered for `User`. `Profile` itself is not registered.
 
 ## Steps
-- [ ] 1. `Profile` model with its schema migration, one-to-one and cascading — test: `src/apps/accounts/tests.py` (`ProfileModelTests`):
+- [x] 1. `Profile` model with its schema migration, one-to-one and cascading — test: `src/apps/accounts/tests.py` (`ProfileModelTests`):
   - `"profile"` is among the `accounts` app's model names (assertion first, so red is a failure, not a `LookupError`)
   - via `apps.get_model("accounts", "Profile")`: `user` is a `OneToOneField` to `AUTH_USER_MODEL` with `related_name == "profile"` and `on_delete is CASCADE`
   - `name` has max 100 and is blank-able; `cohort` has max 50 and is blank-able; `focus_areas` is a `JSONField` with default `list` and is blank-able

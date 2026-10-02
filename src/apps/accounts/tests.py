@@ -10,6 +10,7 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.views import LoginView
 from django.core.management import call_command
+from django.db import models
 from django.shortcuts import resolve_url
 from django.test import TestCase
 from django.urls import resolve, reverse
@@ -294,3 +295,42 @@ class AuthFlowTests(TestCase):
 
         self.assertRedirects(response, "/")
         self.assertEqual(self.client.session.get(SESSION_KEY), str(user.pk))
+
+
+class ProfileModelTests(TestCase):
+    def profile_model(self):
+        names = [m._meta.model_name for m in apps.get_app_config("accounts").get_models()]
+        self.assertIn("profile", names)
+        return apps.get_model("accounts", "Profile")
+
+    def test_profile_is_linked_one_to_one_to_the_user_and_cascades(self):
+        user_field = self.profile_model()._meta.get_field("user")
+
+        self.assertIsInstance(user_field, models.OneToOneField)
+        self.assertIs(user_field.related_model, get_user_model())
+        self.assertEqual(user_field.remote_field.related_name, "profile")
+        self.assertIs(user_field.remote_field.on_delete, models.CASCADE)
+
+    def test_profile_fields_may_be_blank_with_expected_limits(self):
+        meta = self.profile_model()._meta
+        name, cohort, focus_areas = (meta.get_field(f) for f in ("name", "cohort", "focus_areas"))
+
+        self.assertEqual((name.max_length, name.blank), (100, True))
+        self.assertEqual((cohort.max_length, cohort.blank), (50, True))
+        self.assertIsInstance(focus_areas, models.JSONField)
+        self.assertIs(focus_areas.default, list)
+        self.assertTrue(focus_areas.blank)
+
+    def test_profile_migration_is_up_to_date(self):
+        self.profile_model()
+
+        call_command("makemigrations", "accounts", check=True, dry_run=True, verbosity=0)
+
+    def test_deleting_a_user_deletes_their_profile(self):
+        profile_model = self.profile_model()
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        profile_model.objects.get_or_create(user=user)
+
+        user.delete()
+
+        self.assertFalse(profile_model.objects.exists())
