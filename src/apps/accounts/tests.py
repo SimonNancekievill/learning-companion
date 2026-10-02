@@ -5,9 +5,12 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import AbstractUser
 from django.core.management import call_command
 from django.test import TestCase
+
+from apps.accounts.forms import SignUpForm
 
 APP_DIR = Path(__file__).resolve().parent
 
@@ -37,3 +40,10 @@ class UserAdminTests(TestCase):
 
         self.assertTrue(admin.site.is_registered(user_model))
         self.assertIsInstance(admin.site.get_model_admin(user_model), UserAdmin)
+
+
+class SignUpFormTests(TestCase):
+    def test_sign_up_form_is_a_user_creation_form_for_the_custom_user(self):
+        self.assertTrue(issubclass(SignUpForm, UserCreationForm))
+        self.assertIs(SignUpForm._meta.model, get_user_model())
+        self.assertEqual(list(SignUpForm().fields), ["username", "password1", "password2"])
