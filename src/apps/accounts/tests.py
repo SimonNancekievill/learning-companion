@@ -67,6 +67,29 @@ class UserAdminTests(TestCase):
             with self.subTest(field=field):
                 self.assertContains(response, f'name="profile-0-{field}"')
 
+    def test_add_user_page_has_no_profile_inline_and_creates_one_profile(self):
+        root = get_user_model().objects.create_superuser("root", password=STRONG_PASSWORD)
+        self.client.force_login(root)
+        add_path = "/admin/accounts/user/add/"
+
+        page = self.client.get(add_path)
+        response = self.client.post(
+            add_path,
+            {
+                "username": "grace",
+                "password1": STRONG_PASSWORD,
+                "password2": STRONG_PASSWORD,
+                "profile-TOTAL_FORMS": "1",
+                "profile-INITIAL_FORMS": "0",
+                "profile-0-name": "Grace",
+            },
+        )
+
+        self.assertEqual(page.status_code, 200)
+        self.assertNotContains(page, 'name="profile-0-name"')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Profile.objects.filter(user__username="grace").count(), 1)
+
 
 class SignUpFormTests(TestCase):
     def test_sign_up_form_is_a_user_creation_form_for_the_custom_user(self):
