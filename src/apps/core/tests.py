@@ -56,10 +56,8 @@ class BaseLayoutTests(SimpleTestCase):
 
         self.assertRegex(header, r'<a href="/"[^>]*>Learning Companion</a>')
 
-    def test_nav_block_is_empty_by_default(self):
-        header = self.element(self.render(), "header")
-
-        self.assertRegex(header, r"<nav[^>]*></nav>")
+    def test_nav_block_adds_nothing_by_default(self):
+        self.assertEqual(self.render(), self.render("{% block nav %}{% endblock %}"))
 
     def test_nav_block_can_be_overridden_inside_header(self):
         html = self.render('{% block nav %}<a href="/x">X</a>{% endblock %}')
