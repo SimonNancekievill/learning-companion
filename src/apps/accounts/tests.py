@@ -160,3 +160,16 @@ class LoginSubmitTests(TestCase):
 
         self.assertRedirects(response, "/")
         self.assertEqual(self.client.session.get(SESSION_KEY), str(self.user.pk))
+
+    def test_safe_next_is_followed_and_unsafe_next_is_ignored(self):
+        credentials = {"username": "ada", "password": STRONG_PASSWORD}
+        cases = {
+            f"{LOGIN_PATH}?next={SIGNUP_PATH}": SIGNUP_PATH,
+            f"{LOGIN_PATH}?next=https://evil.example/": "/",
+        }
+        for url, expected in cases.items():
+            with self.subTest(url=url):
+                response = self.client.post(url, credentials)
+
+                self.assertRedirects(response, expected, fetch_redirect_response=False)
+                self.client.logout()
