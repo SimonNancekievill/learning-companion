@@ -62,3 +62,11 @@ class BaseLayoutTests(SimpleTestCase):
 
     def test_layout_has_a_footer(self):
         self.element(self.render(), "footer")
+
+    def test_title_defaults_to_app_name(self):
+        self.assertIn("<title>Learning Companion</title>", self.render())
+
+    def test_title_block_can_be_overridden(self):
+        html = self.render("{% block title %}Goals{% endblock %}")
+
+        self.assertIn("<title>Goals</title>", html)
