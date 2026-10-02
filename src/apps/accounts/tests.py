@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 from django.apps import apps
@@ -242,3 +243,20 @@ class NavTests(TestCase):
         self.assertRegex(header, rf'<a\b[^>]*\bhref="{SIGNUP_PATH}"[^>]*>\s*Sign up\s*</a>')
         self.assertNotIn("Log out", header)
         self.assertNotIn(LOGOUT_PATH, header)
+
+    def test_logged_in_nav_shows_username_and_post_log_out_form_only(self):
+        user = get_user_model().objects.create_user("ada", password=STRONG_PASSWORD)
+        self.client.force_login(user)
+
+        header = self.header(self.client.get("/"))
+
+        self.assertIn("ada", header)
+        form = re.search(r"<form\b([^>]*)>(.*?)</form>", header, re.S)
+        self.assertIsNotNone(form, "nav has no log-out form")
+        attributes, body = form.groups()
+        self.assertRegex(attributes, r'\bmethod="post"')
+        self.assertRegex(attributes, rf'\baction="{LOGOUT_PATH}"')
+        self.assertIn("csrfmiddlewaretoken", body)
+        self.assertRegex(body, r"<button\b[^>]*>\s*Log out\s*</button>")
+        self.assertNotIn(f'href="{LOGIN_PATH}"', header)
+        self.assertNotIn(f'href="{SIGNUP_PATH}"', header)
