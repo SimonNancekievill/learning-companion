@@ -83,7 +83,7 @@
   - each gives status 200, template `accounts/profile.html`, `"focus_areas"` in `form.errors`, the error text in the body, and the profile unchanged after `refresh_from_db()`
 
   impl: none expected — covers: AC7 (page)
-- [ ] 10. Other invalid input re-renders with the error and changes nothing (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py` (POST `name="x" * 101` → 200, `"name"` in `form.errors`, the profile unchanged) — impl: none expected — covers: AC8
+- [x] 10. Other invalid input re-renders with the error and changes nothing (characterization, `test(...)` commit) — test: `src/apps/accounts/tests.py` (POST `name="x" * 101` → 200, `"name"` in `form.errors`, the profile unchanged) — impl: none expected — covers: AC8
 - [ ] 11. The username in the nav links to the profile page — test: `src/apps/accounts/tests.py` (`NavTests`: logged in as ada, the header matches `<a\b[^>]*\bhref="/accounts/profile/"[^>]*>\s*ada\s*</a>`; the anonymous header contains no `href="/accounts/profile/"`) — impl: `src/templates/base.html` — covers: AC9
 
 ## Coverage

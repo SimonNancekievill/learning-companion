@@ -676,3 +676,16 @@ class ProfilePageTests(TestCase):
                     (self.profile.name, self.profile.cohort, self.profile.focus_areas),
                     ("Ada", "B1", ["Django", "SQL"]),
                 )
+
+    def test_other_invalid_input_shows_the_error_and_saves_nothing(self):
+        data = {"name": "x" * 101, "cohort": "C3", "focus_areas": "Testing"}
+
+        response = self.client.post(PROFILE_PATH, data)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("name", response.context["form"].errors)
+        self.profile.refresh_from_db()
+        self.assertEqual(
+            (self.profile.name, self.profile.cohort, self.profile.focus_areas),
+            ("Ada", "B1", ["Django", "SQL"]),
+        )
